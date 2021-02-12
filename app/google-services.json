@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "604345639792",
+    "project_id": "h4paystore",
+    "storage_bucket": "h4paystore.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:604345639792:android:93e7bbe58ba1f6ebcca5b5",
+        "android_client_info": {
+          "package_name": "com.h4pay.store"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "604345639792-54a6f56as8av1n77samnie4e64d4fegm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFnIOxMUHLokROWSU5BP4ln3UBQFbkWGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "604345639792-54a6f56as8av1n77samnie4e64d4fegm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

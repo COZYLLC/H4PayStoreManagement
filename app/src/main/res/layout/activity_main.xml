@@ -1,0 +1,185 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"  tools:context=".MainActivity"
+    android:background="#F2F2F2" android:padding="20dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="2.5">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+
+                <TextView
+                    android:id="@+id/time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12:40"
+                   android:textStyle="bold"
+                    android:textSize="130dp"
+                    android:textColor="@color/black"/>
+
+
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="교환권 사용"
+                    android:id="@+id/exchangeButton"
+                    android:autoSizeTextType="uniform"
+                    android:textColor="@color/black"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="정산"
+                    android:id="@+id/calculation"
+                    android:autoSizeTextType="uniform"
+                    android:textColor="@color/black"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+           
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.75">
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="재고 관리"
+                    android:id="@+id/stockManager"
+                    android:autoSizeTextType="uniform"
+                    android:textColor="@color/black"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="주문 내역\n확인"
+                    android:id="@+id/orderListButton"
+                    android:autoSizeTextType="uniform"
+                    android:textColor="@color/black"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="공지 등록"
+                    android:id="@+id/makeNoticeButton"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:textColor="@color/black"
+                    android:autoSizeTextType="uniform"/>
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="문의사항 \n확인"
+                    android:id="@+id/csButton"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:textColor="@color/black"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5">
+
+                <Button
+                   android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="개발자 호출"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="40dp"
+                    android:textColor="@color/black"
+                    android:id="@+id/callDeveloperButton"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/rounded" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>
