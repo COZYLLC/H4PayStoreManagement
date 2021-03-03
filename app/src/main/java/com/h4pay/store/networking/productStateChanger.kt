@@ -22,7 +22,6 @@ class productStateChanger(private var state:JSONObject) : AsyncTask<Void, JSONOb
             val httpCon =
                 urlCon.openConnection() as HttpURLConnection
 
-
             var json = state.toString()
 
             // Set some headers to inform server about the type of the content

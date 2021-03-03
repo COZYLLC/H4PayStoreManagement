@@ -57,6 +57,7 @@ class stockManagerActivity(): AppCompatActivity() {
         setContentView(R.layout.activity_stockmanager)
         loadUI()
         loadList() //RecyclerView Init
+        loadProduct(0)
     }
 
     fun loadUI(){
@@ -140,7 +141,7 @@ class stockManagerActivity(): AppCompatActivity() {
         val item = prodList.getJSONObject(position)
         val soldout = item.getBoolean("soldout")
         productNameView.text = item.getString("productName")
-        productPriceView.text = item.getString("price")
+        productPriceView.text = item.getString("price") + " 원"
         discountButton.setOnClickListener {
             //TODO: 할인 Dialog Display
         }
@@ -165,6 +166,8 @@ class stockManagerActivity(): AppCompatActivity() {
                     val res = productStateChanger(state).execute().get()
                     if (res.getBoolean("modifySuccess")){
                         Toast.makeText(this@stockManagerActivity, "상품 수정이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                        finish()
+                        startActivity(intent)
                     }
                 },{
                     inStockView.isChecked = false
@@ -180,6 +183,8 @@ class stockManagerActivity(): AppCompatActivity() {
                     state.accumulate("soldout", isChecked)
                     if (productStateChanger(state).execute().get().getBoolean("modifySuccess")){
                         Toast.makeText(this@stockManagerActivity, "상품 수정이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                        finish()
+                        startActivity(intent)
                     }
                 },{
                     inStockView.isChecked = true
@@ -215,8 +220,9 @@ class stockManagerActivity(): AppCompatActivity() {
                         state.accumulate("desc", item.getString("desc"))
                         state.accumulate("img", item.getString("img"))
                         state.accumulate("soldout", item.getBoolean("soldout"))
-                        val res = productStateChanger(state).execute().get()
+                        val res = productStateChanger(state).execute().get() //result
                         Toast.makeText(this, res.getString("message"), Toast.LENGTH_SHORT).show()
+                        productPriceView.text = editText.text.toString() + " 원"
                     }
                     else{ //할인율
                         if (editText.text.toString().length <= 3){
@@ -229,6 +235,7 @@ class stockManagerActivity(): AppCompatActivity() {
                             state.accumulate("soldout", item.getBoolean("soldout"))
                             val res = productStateChanger(state).execute().get()
                             Toast.makeText(this, res.getString("message"), Toast.LENGTH_SHORT).show()
+                            productPriceView.text = (item.getInt("price") - (item.getInt("price") * editText.text.toString().toInt() / 100)).toString()
                         } else {
 
                         }
