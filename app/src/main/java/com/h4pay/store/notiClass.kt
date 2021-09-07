@@ -77,7 +77,7 @@ class notiClass : FirebaseMessagingService() {
             val title = p0.data.get("title")
             val message = p0.data.get("message")
             val category = p0.data.get("category")
-            val orderID = p0.data.get("orderID")?.toDouble()
+            val orderID = p0.data.get("orderID")
             var pendingIntent:PendingIntent? = null
             if (category =="orderNotify"){
                 val intent = Intent(this, orderList::class.java)

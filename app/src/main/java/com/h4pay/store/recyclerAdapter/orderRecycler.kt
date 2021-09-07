@@ -58,7 +58,7 @@ class orderRecycler(val context: Context, val orders: JSONArray?) : RecyclerView
             //텍스트 설정
             val f = NumberFormat.getInstance()
             f.isGroupingUsed = false
-            orderId.text = "No. " + f.format(orders.get("orderid"))
+            orderId.text = "No. " + orders.getString("orderid")
             date.text = orders.get("date").toString()
             amount.text = orders.get("amount").toString() + " ₩"
             val exchanged = orders.get("exchanged")

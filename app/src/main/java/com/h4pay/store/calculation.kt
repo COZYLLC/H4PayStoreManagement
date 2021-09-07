@@ -1,4 +1,4 @@
-package com.h4pay.store
+    package com.h4pay.store
 
 import android.content.Context
 import android.os.Environment
@@ -33,7 +33,7 @@ class calculation {
             val row = sheet1.createRow(x+1)
             row.createCell(0).setCellValue("${x+1}")
             row.createCell(1).setCellValue(jsonObject.getString("uid"))
-            row.createCell(2).setCellValue(f.format(jsonObject.getDouble("orderid")))
+            row.createCell(2).setCellValue(jsonObject.getString("orderid"))
             row.createCell(3).setCellValue(jsonObject.getString("paymentkey"))
             row.createCell(4).setCellValue(jsonObject.getString("date"))
             row.createCell(5).setCellValue(jsonObject.getJSONArray("item").toString())

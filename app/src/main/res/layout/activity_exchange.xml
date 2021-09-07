@@ -1,57 +1,78 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent"  tools:context=".MainActivity"
-    android:background="#F2F2F2" android:padding="20dp">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F2F2"
+    android:padding="20dp"
+    tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
             <TextView
-               android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="교환권 사용"
-                android:textSize="70sp"/>
+                android:textSize="70sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/textView"
-               android:textStyle="bold"
                 android:text="온라인에서 결제한 상품을 교환할 수 있습니다."
                 android:textSize="20sp"
-                />
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/orderIdInput"
                 android:layout_width="wrap_content"
-                android:layout_marginTop="100dp"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/explain"
-                android:ems="17"
-                android:inputType="number"
-                android:maxLength="21"
+                android:layout_marginTop="100dp"
+                android:ems="25"
                 android:hint="주문번호"
-               android:textStyle="bold">
+                android:inputType="number"
+                android:maxLength="25"
+                android:textStyle="bold"
+                android:windowSoftInputMode="stateHidden">
+
                 <requestFocus />
             </EditText>
+
             <TextView
-               android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/orderIdInput"
                 android:text="바코드 스캐너로 스캔하거나 주문번호를 직접 입력해주세요."
                 android:textSize="15sp"
-                />
-        </LinearLayout>
+                android:textStyle="bold" />
 
+            <LinearLayout
+                android:id="@+id/cameraScan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@color/white"
+                android:padding="15dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="카메라로 바코드 스캔하기" />
+            </LinearLayout>
+
+
+        </LinearLayout>
 
 
         <LinearLayout
@@ -65,51 +86,50 @@
                 android:id="@+id/textView12"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="교환권 정보"
                 android:textSize="30dp"
-               android:textStyle="bold"
-                android:layout_marginBottom="5dp"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/lookup_orderid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-               android:textStyle="bold"
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/lookup_uid"
-               android:textStyle="bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
-               android:textStyle="bold"
                 android:id="@+id/lookup_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
-               android:textStyle="bold"
                 android:id="@+id/lookup_expire"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="20sp"/>
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
-               android:textStyle="bold"
                 android:id="@+id/lookup_amount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="20sp"/>
-
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
 
             <LinearLayout
@@ -117,35 +137,38 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="5dp">
+
                 <TextView
-                   android:textStyle="bold"
-                android:id="@+id/exchanged"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="20sp"
-                    android:textColor="@color/white" />
+                    android:id="@+id/exchanged"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <TextView
-               android:textStyle="bold"
-                android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="주문 품목"
                 android:textSize="30dp"
-                android:text="주문 품목" />
+                android:textStyle="bold" />
 
-
-
-
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/itemsRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
                     android:layout_weight="1"
-                    android:descendantFocusability="blocksDescendants"/>
+                    android:descendantFocusability="blocksDescendants"
+                    android:orientation="horizontal"
+                    android:windowSoftInputMode="stateHidden" />
+            </ScrollView>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -156,58 +179,29 @@
                     android:id="@+id/exchange_Button"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginTop="10dp"
-                    android:padding="10dp"
+                    android:layout_weight="1"
                     android:background="@drawable/rounded_green"
+                    android:orientation="horizontal"
 
-                    android:textColor="@color/black"
-                    android:orientation="horizontal" >
-
-                    <TextView
-                       android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        android:textAlignment="center"
-                        android:textSize="20sp"
-                        android:textColor="@color/white"
-                        android:text="교환 완료"/>
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/exchange_cancel_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginTop="10dp"
                     android:padding="10dp"
-                    android:background="@drawable/rounded_red"
-
-                    android:textColor="@color/black"
-                    android:orientation="horizontal" >
+                    android:textColor="@color/black">
 
                     <TextView
-                       android:textStyle="bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_weight="1"
+                        android:text="교환 완료"
                         android:textAlignment="center"
-                        android:textSize="20sp"
                         android:textColor="@color/white"
-                        android:text="주문 취소"/>
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
-
             </LinearLayout>
-
-
-
-
         </LinearLayout>
 
     </LinearLayout>
-
 
 
 </RelativeLayout>

@@ -118,12 +118,13 @@
             <Button
                 android:id="@+id/discountApply"
                 android:textStyle="bold"
+                android:textSize="20dp"
                 android:layout_marginLeft="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
 
-                android:text="할인 적용" />
+                android:text="가격 변경" />
         </LinearLayout>
 
 

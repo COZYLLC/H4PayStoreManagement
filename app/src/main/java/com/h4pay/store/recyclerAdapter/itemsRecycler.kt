@@ -56,10 +56,10 @@ class itemsRecycler(val context: Context, val items: JSONArray) : RecyclerView.A
         @SuppressLint("SetTextI18n")
         fun bind(item: JSONObject, context: Context) {
             val gotName = prodList.getJSONObject(item.getInt("id")).getString("productName")
-            val gotAmount = " " + (item.getInt("amount")).toString() + " 개"
+            val gotAmount = " " + (item.getInt("qty")).toString() + " 개"
             val gotImage = prodList.getJSONObject(item.getInt("id")).getString("img")
             //텍스트 설정
-            if (item.getInt("amount") != 0) {
+            if (item.getInt("qty") != 0) {
                 val f = NumberFormat.getInstance()
                 f.isGroupingUsed = false
                 pName.text = gotName

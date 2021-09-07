@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -14,8 +15,8 @@ android {
         applicationId "com.h4pay.store"
         minSdkVersion 27
         targetSdkVersion 30
-        versionCode 6
-        versionName "1.123"
+        versionCode 15
+        versionName "1.132"
         buildConfigField "String", "API_URL", keystoreProprerties["API_URL"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,25 +37,29 @@ android {
 }
 
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
 
 dependencies {
     implementation platform('com.google.firebase:firebase-bom:26.2.0')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.firebase:firebase-analytics:18.0.2'
+    implementation 'androidx.gridlayout:gridlayout:1.0.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+    implementation 'com.github.jtv7:RippleSwitch:1.0'
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'com.journeyapps:zxing-android-embedded:3.5.0'
     implementation 'com.github.bumptech.glide:annotations:4.9.0'
     implementation 'com.google.firebase:firebase-messaging-ktx'
-    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation "androidx.gridlayout:gridlayout:1.0.0"
     implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation 'com.dshantanu.androidsquareslib:androidsquareslib:1.0'
     implementation group: 'org.apache.poi', name: 'poi', version: '5.0.0'
 
 }
