@@ -88,19 +88,21 @@ class MainActivity : AppCompatActivity() {
 
     fun updateChecker(): Int {
         var jsonObject: JSONObject?
-        jsonObject = Get("https://yoon-lab.xyz:23408/api/version").execute().get()
+        jsonObject = Get("${BuildConfig.API_URL}/version").execute().get()
         if (jsonObject == null) {
             AlertDialog.Builder(this)
                 .setTitle("서버 오류")
                 .setMessage("서버 오류로 인해 엡데이트 확인이 불가능합니다. 개발자에게 문의해주세요.")
         } else {
-            val version = jsonObject.getDouble("version")
-            val changes = jsonObject.getString("changes")
+            val result = jsonObject.getJSONObject("result")
+            val version = result.getDouble("version")
+            val changes = result.getString("changes")
+            val url = result.getString("url")
             val versionName = getVersionInfo(this)
 
             if (versionName.toDouble() < version) {
                 yesOnlyDialog(this, "$version 업데이트가 있어요!\n변경점: $changes",
-                    { downloadApp(version) }, "업데이트", R.drawable.ic_baseline_settings_24
+                    { downloadApp(version, url) }, "업데이트", R.drawable.ic_baseline_settings_24
                 )
 
                 return 1
@@ -109,29 +111,29 @@ class MainActivity : AppCompatActivity() {
         return 0
     }
 
-    fun downloadApp(version: Double) {
+    fun downloadApp(version:Double, url:String) {
         var mDownloadManager: DownloadManager =
             this.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val versionStr = version.toString().split("\\.".toRegex())
         Log.e(
             TAG,
-            "https://h4pay.co.kr/file/apk/h4pay_manager_" + versionStr[0] + "_" + versionStr[1] + ".apk"
+            url
         )
-        val url =
-            Uri.parse("https://h4pay.co.kr/file/apk/h4pay_manager_" + versionStr[0] + "_" + versionStr[1] + ".apk")
-        val request: DownloadManager.Request = DownloadManager.Request(url)
+        val uri =
+            Uri.parse(url)
+        val request: DownloadManager.Request = DownloadManager.Request(uri)
         request.setTitle("매점 앱 업데이트")
         request.setDescription("다운로드 중입니다...")
         request.setDestinationInExternalPublicDir(
             Environment.DIRECTORY_DOWNLOADS,
-            "h4pay_manager_" + versionStr[0] + "_" + versionStr[1] + ".apk"
+            "h4pay_manager_" + versionStr[0] + "." + versionStr[1] + ".apk"
         );
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI and DownloadManager.Request.NETWORK_MOBILE)
-        mFileName = "h4pay_manager_" + versionStr[0] + "_" + versionStr[1] + ".apk"
+        mFileName = "h4pay_manager_" + versionStr[0] + "." + versionStr[1] + ".apk"
         mDownloadQueueId = mDownloadManager.enqueue(request)
         Log.e(TAG, mFileName + ", " + mDownloadQueueId.toString())
-        lastestVersion = version.toString().split("\\.".toRegex())[0] + "_" + version.toString()
+        lastestVersion = version.toString().split("\\.".toRegex())[0] + "." + version.toString()
             .split("\\.".toRegex())[1]
     }
 
