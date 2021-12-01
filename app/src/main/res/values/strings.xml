@@ -1,4 +1,35 @@
 <resources>
-    <string name="app_name">H4PayStoreManagement</string>
+    <string name="app_name">H4Pay 교환 앱</string>
     <string name="product" />
+    <string name="scanOrEnterOrderId">바코드를 스캔하거나 주문번호를 직접 입력해주세요.</string>
+    <string name="productsOrdered">주문 품목</string>
+    <string name="cancelOrder">주문 취소</string>
+    <string name="scanWithCamera">카메라로 스캔하기</string>
+    <string name="exchangeOrder">교환 하기</string>
+    <string name="useCoupon">교환권 사용</string>
+    <string name="orderDate">주문 날짜</string>
+    <string name="orderUid">주문자 아이디</string>
+    <string name="orderExpire">주문 만료 날짜</string>
+    <string name="orderAmount">주문 가격</string>
+    <string name="orderExchanged">교환 여부</string>
+    <string name="callDeveloper">개발자에게 문의하기</string>
+    <string name="showInfo">H4Pay 관리도구 정보 보기</string>
+    <string name="title">제목</string>
+    <string name="content">문의 내용</string>
+    <string name="uploadPhoto">사진 첨부</string>
+    <string name="submit">제출하기</string>
+    <string name="uploadImage">사진 첨부</string>
+    <string name="reportError">오류 문의하기</string>
+    <string name="developerContract">개발자 연락처</string>
+    <string name="tel">전화번호</string>
+    <string name="cozy_tel">010-6795-8358</string>
+    <string name="email">이메일</string>
+    <string name="cozy_email">support@cozyllc.co.kr</string>
+    <string name="errorManual">오류 대응 메뉴얼</string>
+    <string name="goBack">뒤로 가기</string>
+    <string name="version">현재 버전</string>
+    <string name="latestVersion">최신 버전</string>
+    <string name="doUpdate">업데이트 확인</string>
+    <string name="error_update_cannotOpen">업데이트 파일을 열 수 없습니다. 다시 다운로드 하거나 직접 APK를 실행해보세요.</string>
+    <string name="openStore">매점을 사용하기 위해 매점을 열어주세요.</string>
 </resources>

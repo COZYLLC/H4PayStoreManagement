@@ -1,57 +1,50 @@
 package com.h4pay.store.networking.tools
 
+import android.os.AsyncTask
 import android.util.Log
 import com.h4pay.store.BuildConfig
+import okhttp3.*
 import java.io.File
 
-import okhttp3.Call; import okhttp3.Callback; import okhttp3.MultipartBody; import okhttp3.OkHttpClient; import okhttp3.Request; import okhttp3.RequestBody; import okhttp3.Response;
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 import java.lang.Exception
 import java.util.concurrent.CountDownLatch
 
-class uploadImage(){
-    private val TAG = "uploadImage"
-
-    fun upload(pdName:String, pdPrice:String, pdDesc:String, file: File): Boolean {
-
+class uploadSupport (private val title:String, private val content:String, private val file:File?) : AsyncTask<JSONObject, JSONObject, JSONObject>() {
+    private val TAG = "uploadSupport"
+    override fun doInBackground(vararg params: JSONObject?): JSONObject? {
+        val client = OkHttpClient()
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("productName", pdName)
-            .addFormDataPart("desc", pdDesc)
-            .addFormDataPart("price", pdPrice)
-            .addFormDataPart("file", UnicodeKorean.main(pdName) + ".png", RequestBody.create(MultipartBody.FORM, file))
-            .build()
+            .addFormDataPart("uid", "storeExchanger")
+            .addFormDataPart("email", "storeExchanger")
+            .addFormDataPart("title", title)
+            .addFormDataPart("content", content)
+            .addFormDataPart("category", "category")
+        if (file != null) requestBody.addFormDataPart("img", file.name, RequestBody.create(MultipartBody.FORM, file))
+        val builtBody:RequestBody = requestBody.build()
 
         val request = Request.Builder()
-            .url("${BuildConfig.API_URL}/product/add")
+            .url("${BuildConfig.API_URL}/upload")
             .addHeader("Content-Type", "multipart/form-data; charset=utf-8")
-            .post(requestBody)
+            .post(builtBody)
             .build()
-        var countDownLatch = CountDownLatch(1)
-        var isSuccess = false
         try {
-
-            val client = OkHttpClient()
-            client.newCall(request).enqueue(object:Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
-                    isSuccess = false
-                    countDownLatch.countDown()
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.code == 200){
-                        isSuccess = JSONObject(response.body!!.string()).getBoolean("status")
-                        countDownLatch.countDown()
-                    }
-                }
-
-            })
-        } catch (e:Exception){
-            e.printStackTrace()
+            val response = client.newCall(request).execute().body!!.string();
+            var res:JSONObject = JSONObject()
+            Log.d(TAG, response)
+            res = JSONObject(response)
+            return res
+        } catch (e:Exception) {
+            return null
         }
-        countDownLatch.await()
-        return isSuccess
     }
+
+    override fun onPostExecute(result: JSONObject) {
+        super.onPostExecute(result)
+    }
+
 }
