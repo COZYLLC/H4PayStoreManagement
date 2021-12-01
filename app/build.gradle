@@ -6,8 +6,8 @@ plugins {
 
 android {
     def keystorePropertiesFile = rootProject.file("keystore.properties")
-    def keystoreProprerties = new Properties()
-    keystoreProprerties.load(new FileInputStream(keystorePropertiesFile))
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
@@ -15,18 +15,27 @@ android {
         applicationId "com.h4pay.store"
         minSdkVersion 27
         targetSdkVersion 30
-        versionCode 19
-        versionName "1.136"
-        buildConfigField "String", "API_URL", keystoreProprerties["API_URL"]
+        versionCode 24
+        versionName "1.41"
+        buildConfigField "String", "API_URL", keystoreProperties["API_URL"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
