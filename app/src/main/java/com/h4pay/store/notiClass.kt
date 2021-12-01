@@ -77,18 +77,13 @@ class notiClass : FirebaseMessagingService() {
             val title = p0.data.get("title")
             val message = p0.data.get("message")
             val category = p0.data.get("category")
-            val orderID = p0.data.get("orderID")
+            val orderId = p0.data.get("orderId")
             var pendingIntent:PendingIntent? = null
-            if (category =="orderNotify"){
-                val intent = Intent(this, orderList::class.java)
-                intent.putExtra("category", category)
-                intent.putExtra("orderID", orderID)
-                pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            } else if (category == "update") {
+            if (category != null){
                 val intent = Intent(this, MainActivity::class.java)
                 intent.putExtra("category", category)
-                pendingIntent =
-                        PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                intent.putExtra("orderId", orderId)
+                pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
 
             var notificationBuilder: NotificationCompat.Builder? = null

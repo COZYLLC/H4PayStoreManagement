@@ -55,6 +55,7 @@ class itemsRecycler(val context: Context, val items: JSONArray) : RecyclerView.A
         //val pName = itemView.findViewById<TextView>(R.id.pName)
         @SuppressLint("SetTextI18n")
         fun bind(item: JSONObject, context: Context) {
+            Log.d("TAG", item.toString())
             val gotName = prodList.getJSONObject(item.getInt("id")).getString("productName")
             val gotAmount = " " + (item.getInt("qty")).toString() + " 개"
             val gotImage = prodList.getJSONObject(item.getInt("id")).getString("img")

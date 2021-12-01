@@ -43,6 +43,11 @@
         <item name="android:fontFamily">@font/spoqahanfamily</item>
     </style>
 
+    <style name="OrderTextStyle" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
+        <item name="android:fontFamily">@font/spoqahanfamily</item>
+        <item name="android:textSize">30sp</item>
+    </style>
+
     <style name="AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
         <item name="colorPrimary">#000000</item>
         <item name="colorPrimaryDark">#000000</item>
