@@ -17,7 +17,7 @@ import org.json.JSONObject
 import java.text.NumberFormat
 
 
-class itemsRecycler(val context: Context, val items: JSONArray) : RecyclerView.Adapter<itemsRecycler.Holder>() {
+class itemsRecycler(private val context: Context, private var items: JSONArray) : RecyclerView.Adapter<itemsRecycler.Holder>() {
 
     private val TAG = "[DEBUG]"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -30,6 +30,12 @@ class itemsRecycler(val context: Context, val items: JSONArray) : RecyclerView.A
         fun onItemClick(v:View, positon:Int){
 
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun changeItems(newItems: JSONArray) {
+        items = newItems
+        notifyDataSetChanged()
     }
 
     private var mListner:OnItemClickListner? = null;
@@ -73,7 +79,10 @@ class itemsRecycler(val context: Context, val items: JSONArray) : RecyclerView.A
                         .into(pImage)
                 }
             }
-
+        }
+        fun add(position:Int, item:JSONObject) {
+            items.put(item)
+            notifyItemInserted(position)
         }
     }
 

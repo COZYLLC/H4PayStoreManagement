@@ -32,4 +32,10 @@
     <string name="doUpdate">업데이트 확인</string>
     <string name="error_update_cannotOpen">업데이트 파일을 열 수 없습니다. 다시 다운로드 하거나 직접 APK를 실행해보세요.</string>
     <string name="openStore">매점을 사용하기 위해 매점을 열어주세요.</string>
+    <string name="productsToExchange">교환 품목</string>
+    <string name="barcodeOfProduct">상품 바코드</string>
+    <string name="voucherSerial">일련번호</string>
+    <string name="exchangeVoucher">상품권 사용</string>
+    <string name="scanBarcodeOrInput">바코드를 스캔하거나 일련번호를 직접 입력해주세요.</string>
+    <string name="switchToVoucher">상품권 사용하기</string>
 </resources>

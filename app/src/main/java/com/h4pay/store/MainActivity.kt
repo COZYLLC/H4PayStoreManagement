@@ -16,10 +16,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
@@ -32,6 +29,7 @@ import com.h4pay.store.networking.Get
 import com.h4pay.store.networking.Post
 import com.h4pay.store.networking.tools.permissionManager
 import com.h4pay.store.recyclerAdapter.itemsRecycler
+import com.h4pay.store.util.itemJsonToArray
 import com.jtv7.rippleswitchlib.RippleSwitch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -47,7 +45,7 @@ fun showServerError(context: Activity) {
     AlertDialog.Builder(context, R.style.AlertDialogTheme)
         .setTitle("서버 오류")
         .setMessage("서버 오류로 인해 사용할 수 없습니다. 개발자에게 문의 바랍니다.")
-        .setPositiveButton("확인") { dialogInterface: DialogInterface, i: Int ->
+        .setPositiveButton("확인") { dialadogInterface: DialogInterface, i: Int ->
             context.finish()
         }.show()
 }
@@ -78,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var openWarningLayout: ConstraintLayout
     private lateinit var usableLayout: ConstraintLayout
 
+    private lateinit var voucherButton: LinearLayout
 
     val ISODateFormat = SimpleDateFormat(
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.JAPANESE
@@ -132,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         openStatusText = findViewById(R.id.openStatusText)
         openWarningLayout = findViewById(R.id.openWarning)
         usableLayout = findViewById(R.id.usable)
-
+        voucherButton = findViewById(R.id.switchToVoucher)
 
         cameraScan.setOnClickListener {
             initScan()
@@ -143,6 +142,11 @@ class MainActivity : AppCompatActivity() {
         }
         showInfoButton.setOnClickListener {
             val intent = Intent(this, H4PayInfo::class.java)
+            startActivity(intent)
+        }
+
+        voucherButton.setOnClickListener {
+            val intent = Intent(this, VoucherActivity::class.java)
             startActivity(intent)
         }
 
@@ -192,6 +196,12 @@ class MainActivity : AppCompatActivity() {
                 if (inputtedOrderId.length < 0 || inputtedOrderId.length > 25) {
                     Toast.makeText(this@MainActivity, "올바른 주문번호가 아닙니다!", Toast.LENGTH_SHORT).show()
                 } else if (inputtedOrderId.length == 25) {
+                    if (inputtedOrderId.startsWith("3")) {
+                        val voucherIntent = Intent(this@MainActivity, VoucherActivity::class.java);
+                        voucherIntent.putExtra("inputtedOrderId", inputtedOrderId)
+                        startActivity(voucherIntent)
+                        return
+                    }
                     //Handling Numbers
                     val f = NumberFormat.getInstance()
                     f.isGroupingUsed = false
@@ -252,16 +262,7 @@ class MainActivity : AppCompatActivity() {
 
                         var items: JSONObject? = res.getJSONObject("item") // stash item array
                         if (items != null) {
-                            var i = 0
-                            var itemArray: JSONArray = JSONArray()
-                            items.keys().forEach { id ->
-                                val qty = items.getInt(id);
-                                var item = JSONObject()
-                                item.put("id", id.toInt())
-                                item.put("qty", qty)
-                                itemArray.put(i, item)
-                                i++
-                            }
+                            val itemArray = itemJsonToArray(items)
                             Log.d("TAG", itemArray.toString())
 
                             viewAdapter =
