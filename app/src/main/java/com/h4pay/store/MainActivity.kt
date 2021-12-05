@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var exchangeButton: LinearLayout
 
     private lateinit var cameraScan: LinearLayout
+    private lateinit var cameraScanCircle: ImageButton
 
     private lateinit var callDeveloperButton:LinearLayout
     private lateinit var showInfoButton: LinearLayout
@@ -115,6 +116,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun setExchangeButtonListener(orderId:String) {
+
+        //------Cancel and Exchange Button OnClick Event----------
+        val context = this@MainActivity
+        exchangeButton.setOnClickListener {
+            customDialogs.yesNoDialog(context, "확인", "정말로 교환처리 하시겠습니까?", {
+                val req = JSONObject().accumulate("orderId", JSONArray().put(0, orderId))
+                if (isGift(orderId) == true) { //선물인 경우
+                    val exchangeRes =
+                        Post("${BuildConfig.API_URL}/gift/exchange", req).execute()
+                            .get()
+                    if (exchangeRes == null) {
+                        showServerError(this@MainActivity)
+                        return@yesNoDialog
+                    } else {
+                        exchangeSuccess(exchangeRes.getBoolean("status"))
+                    }
+                } else { //선물이 아닌 경우
+                    val exchangeRes = Post(
+                        "${BuildConfig.API_URL}/orders/exchange",
+                        req
+                    ).execute().get()
+                    if (exchangeRes == null) {
+                        showServerError(this@MainActivity)
+                        return@yesNoDialog
+                    } else {
+                        exchangeSuccess(exchangeRes.getBoolean("status"))
+                    }
+                }
+            }, {})
+        }
+    }
+
     fun UiInit() {
         time = findViewById(R.id.time)
         edit = findViewById(R.id.orderIdInput)
@@ -125,6 +159,7 @@ class MainActivity : AppCompatActivity() {
         orderExchangedTextView = findViewById(R.id.order_exchanged)
         exchangeButton = findViewById(R.id.exchangeButton)
         cameraScan = findViewById(R.id.cameraScan)
+        cameraScanCircle = findViewById(R.id.cameraScanCircle)
         callDeveloperButton = findViewById(R.id.callDeveloper)
         showInfoButton = findViewById(R.id.showInfo)
         openStatusSwitch = findViewById(R.id.openStatus)
@@ -134,6 +169,9 @@ class MainActivity : AppCompatActivity() {
         voucherButton = findViewById(R.id.switchToVoucher)
 
         cameraScan.setOnClickListener {
+            initScan()
+        }
+        cameraScanCircle.setOnClickListener {
             initScan()
         }
         callDeveloperButton.setOnClickListener {
@@ -149,6 +187,8 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, VoucherActivity::class.java)
             startActivity(intent)
         }
+
+
 
         openStatusSwitch.setOnCheckedChangeListener {
             val status = JSONObject()
@@ -198,8 +238,9 @@ class MainActivity : AppCompatActivity() {
                 } else if (inputtedOrderId.length == 25) {
                     if (inputtedOrderId.startsWith("3")) {
                         val voucherIntent = Intent(this@MainActivity, VoucherActivity::class.java);
-                        voucherIntent.putExtra("inputtedOrderId", inputtedOrderId)
+                        voucherIntent.putExtra("voucherId", inputtedOrderId)
                         startActivity(voucherIntent)
+                        finish()
                         return
                     }
                     //Handling Numbers
@@ -218,7 +259,6 @@ class MainActivity : AppCompatActivity() {
                             if (result.getBoolean("status")) {
                                 res = result.getJSONObject("order")
                                 uid = res.getString("uid")
-
                             } else {
                                 Toast.makeText(
                                     this@MainActivity,
@@ -266,7 +306,7 @@ class MainActivity : AppCompatActivity() {
                             Log.d("TAG", itemArray.toString())
 
                             viewAdapter =
-                                itemsRecycler(this@MainActivity, itemArray) // use itme array
+                                itemsRecycler(false, this@MainActivity, itemArray) // use itme array
                         } else {
                             return
                         }
@@ -285,36 +325,8 @@ class MainActivity : AppCompatActivity() {
                             moneyFormat.format(res.getInt("amount")) + " 원",
                             res.getBoolean("exchanged")
                         )
+                        setExchangeButtonListener(inputtedOrderId)
 
-                        //------Cancel and Exchange Button OnClick Event----------
-                        val context = this@MainActivity
-                        exchangeButton.setOnClickListener {
-                            customDialogs.yesNoDialog(context, "확인", "정말로 교환처리 하시겠습니까?", {
-                                val req = JSONObject().accumulate("orderId", JSONArray().put(0, inputtedOrderId))
-                                if (isGift(inputtedOrderId) == true) { //선물인 경우
-                                    val exchangeRes =
-                                        Post("${BuildConfig.API_URL}/gift/exchange", req).execute()
-                                            .get()
-                                    if (exchangeRes == null) {
-                                        showServerError(this@MainActivity)
-                                        return@yesNoDialog
-                                    } else {
-                                        exchangeSuccess(exchangeRes.getBoolean("status"))
-                                    }
-                                } else { //선물이 아닌 경우
-                                    val exchangeRes = Post(
-                                        "${BuildConfig.API_URL}/orders/exchange",
-                                        req
-                                    ).execute().get()
-                                    if (exchangeRes == null) {
-                                        showServerError(this@MainActivity)
-                                        return@yesNoDialog
-                                    } else {
-                                        exchangeSuccess(exchangeRes.getBoolean("status"))
-                                    }
-                                }
-                            }, {})
-                        }
                     } else {
                         Toast.makeText(this@MainActivity, "주문 내역이 존재하지 않습니다.", Toast.LENGTH_SHORT)
                             .show()
@@ -514,5 +526,64 @@ class MainActivity : AppCompatActivity() {
         fetchProduct()
         UiInit()
         fetchStoreStatus()
+        val passedOrderId = intent.getStringExtra("orderId") ?: return
+        if (passedOrderId.length != 25) return
+        var purchase = JSONObject()
+        if (isGift(passedOrderId) == true) {
+            val result =
+                Get("${BuildConfig.API_URL}/gift/findbyorderId/$passedOrderId").execute()
+                    .get()
+            if (result == null) {
+                showServerError(this@MainActivity)
+                return
+            } else {
+                if (result.getBoolean("status")) {
+                    purchase = result.getJSONObject("gift")
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "불러오지 못했습니다!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return
+                }
+            }
+
+            loadOrderDetail(purchase.getString("uidto"), purchase.getString("date"), purchase.getString("expire"), purchase.getString("amount"), purchase.getBoolean("exchanged") )
+        } else {
+            val result =
+                Get("${BuildConfig.API_URL}/orders/fromorderId/$passedOrderId").execute()
+                    .get()
+            if (result == null) {
+                showServerError(this@MainActivity)
+                return
+            } else {
+                if (result.getBoolean("status")) {
+                    purchase = result.getJSONObject("order")
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "불러오지 못했습니다!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return
+                }
+            }
+            loadOrderDetail(purchase.getString("uid"), purchase.getString("date"), purchase.getString("expire"), purchase.getString("amount"), purchase.getBoolean("exchanged") )
+
+        }
+        var items: JSONObject? = purchase.getJSONObject("item") // stash item array
+        if (items != null) {
+            val itemArray = itemJsonToArray(items)
+            Log.d("TAG", itemArray.toString())
+
+            viewAdapter =
+                itemsRecycler(false, this@MainActivity, itemArray) // use itme array
+        } else {
+            return
+        }
+        recyclerViewInit()
+        setExchangeButtonListener(passedOrderId)
+
     }
 }

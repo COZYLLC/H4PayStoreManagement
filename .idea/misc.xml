@@ -10,8 +10,16 @@
         <entry key="..\:/Users/ckm07/AndroidStudioProjects/H4PayStoreManagement/app/src/main/res/layout/dialog_mkproduct.xml" value="0.25" />
         <entry key="..\:/Users/ckm07/AndroidStudioProjects/H4PayStoreManagement/app/src/main/res/layout/items_recyclerview.xml" value="0.5" />
         <entry key="..\:/Users/ckm07/AndroidStudioProjects/H4PayStoreManagement/app/src/main/res/layout/productrecycler.xml" value="0.45789473684210524" />
-        <entry key="app/src/main/res/layout/activity_exchangemain.xml" value="0.27445867829777454" />
-        <entry key="app/src/main/res/layout/activity_voucher.xml" value="0.3596938775510204" />
+        <entry key="app/src/main/res/drawable-v24/shadow.xml" value="0.23645833333333333" />
+        <entry key="app/src/main/res/drawable/button.xml" value="0.23645833333333333" />
+        <entry key="app/src/main/res/drawable/circle_button.xml" value="0.23645833333333333" />
+        <entry key="app/src/main/res/drawable/ripple_custom.xml" value="0.23645833333333333" />
+        <entry key="app/src/main/res/drawable/round_button.xml" value="0.23645833333333333" />
+        <entry key="app/src/main/res/layout/activity_exchangemain.xml" value="0.4036911147134092" />
+        <entry key="app/src/main/res/layout/activity_info.xml" value="0.21510416666666668" />
+        <entry key="app/src/main/res/layout/activity_report.xml" value="0.21510416666666668" />
+        <entry key="app/src/main/res/layout/activity_voucher.xml" value="0.2590417373251067" />
+        <entry key="app/src/main/res/layout/items_recyclerview.xml" value="0.7454957457867437" />
       </map>
     </option>
   </component>

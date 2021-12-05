@@ -10,21 +10,22 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.h4pay.store.R
+import com.h4pay.store.VoucherActivity
 import com.h4pay.store.prodList
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.NumberFormat
 
 
-class itemsRecycler(private val context: Context, private var items: JSONArray) : RecyclerView.Adapter<itemsRecycler.Holder>() {
+class itemsRecycler( private val isRemovable:Boolean, private val context: Context, private var items: JSONArray) : RecyclerView.Adapter<itemsRecycler.Holder>() {
 
     private val TAG = "[DEBUG]"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val view = LayoutInflater.from(context).inflate(R.layout.items_recyclerview, parent, false)
         return Holder(view)
     }
-
 
     interface OnItemClickListner {
         fun onItemClick(v:View, positon:Int){
@@ -43,6 +44,9 @@ class itemsRecycler(private val context: Context, private var items: JSONArray) 
     fun setOnItemClickListner(listner:OnItemClickListner){
         this.mListner = listner
     }
+   fun getItems() : JSONArray {
+        return items;
+   }
 
     override fun getItemCount(): Int {
         Log.d(TAG, "getItemCount called, ${items.length()} items")
@@ -51,17 +55,39 @@ class itemsRecycler(private val context: Context, private var items: JSONArray) 
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         Log.d(TAG, "current position: $position")
-        holder.bind(items.getJSONObject(position), context)
+        holder.bind(position, items.getJSONObject(position), context)
     }
 
     inner class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val pName = itemView.findViewById<TextView>(R.id.pName)
         val pImage = itemView.findViewById<ImageView>(R.id.pImage)
         val amount = itemView.findViewById<TextView>(R.id.rec_amount)
-        //val pName = itemView.findViewById<TextView>(R.id.pName)
+        val removeButton = itemView.findViewById<FloatingActionButton>(R.id.removeButton)
         @SuppressLint("SetTextI18n")
-        fun bind(item: JSONObject, context: Context) {
+        fun bind(position: Int, item:JSONObject, context: Context) {
             Log.d("TAG", item.toString())
+            removeButton.setOnClickListener {
+                    for (i in 0 until items.length()) {
+                        if (items.getJSONObject(i).getInt("id") == item.getInt("id")) {
+                            if (item.getInt("qty") > 1) {
+                                items.remove(position)
+                                val currentQty = item.getInt("qty")
+                                item.remove("qty")
+                                item.put("qty", currentQty - 1)
+                                items.put(item)
+                                notifyItemChanged(position)
+                                (itemView.context as VoucherActivity)
+                                    .onRecyclerDelButtonClicked()
+                            } else if (item.getInt("qty") == 1) {
+                                items.remove(position)
+                                notifyItemRemoved(position);
+                                (itemView.context as VoucherActivity)
+                                    .onRecyclerDelButtonClicked()
+                            }
+                            return@setOnClickListener
+                        }
+                    }
+            }
             val gotName = prodList.getJSONObject(item.getInt("id")).getString("productName")
             val gotAmount = " " + (item.getInt("qty")).toString() + " 개"
             val gotImage = prodList.getJSONObject(item.getInt("id")).getString("img")

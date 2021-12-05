@@ -16,3 +16,11 @@ fun itemJsonToArray(items:JSONObject) : JSONArray {
     }
     return itemArray
 }
+
+fun itemArrayToJson(items: JSONArray) : JSONObject {
+    val newItems = JSONObject()
+    for (i in 0 until items.length()) {
+        newItems.put(items.getJSONObject(i).getString("id"), items.getJSONObject(i).getInt("qty"))
+    }
+    return newItems
+}

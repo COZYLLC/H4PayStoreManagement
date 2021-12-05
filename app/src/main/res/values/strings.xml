@@ -38,4 +38,5 @@
     <string name="exchangeVoucher">상품권 사용</string>
     <string name="scanBarcodeOrInput">바코드를 스캔하거나 일련번호를 직접 입력해주세요.</string>
     <string name="switchToVoucher">상품권 사용하기</string>
+    <string name="usePurchase">교환권 사용</string>
 </resources>

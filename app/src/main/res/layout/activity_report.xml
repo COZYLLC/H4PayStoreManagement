@@ -89,7 +89,7 @@
                 android:layout_gravity="center"
                 android:text="@string/uploadImage"
                 android:textAlignment="center"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -110,7 +110,7 @@
                 android:layout_gravity="center"
                 android:text="@string/submit"
                 android:textAlignment="center"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
