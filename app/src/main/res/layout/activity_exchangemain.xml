@@ -56,14 +56,15 @@
                 android:layout_weight="1" />
 
 
-            <TextView
+            <TextClock
                 android:id="@+id/time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="12:40"
+                android:format24Hour="HH:mm"
                 android:textColor="@color/black"
-                android:textSize="30dp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -160,6 +161,16 @@
 
                             <requestFocus />
                         </EditText>
+
+                        <ImageButton
+                            android:id="@+id/clearId"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="5dp"
+                            android:background="@drawable/circle_button"
+                            android:src="@drawable/ic_baseline_delete_sweep_24"
+                            app:tint="@color/white">
+                        </ImageButton>
                         <ImageButton
                             android:id="@+id/cameraScanCircle"
                             android:layout_width="40dp"

@@ -16,6 +16,7 @@ import com.h4pay.store.VoucherActivity
 import com.h4pay.store.prodList
 import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.Exception
 import java.text.NumberFormat
 
 
@@ -66,6 +67,10 @@ class itemsRecycler( private val isRemovable:Boolean, private val context: Conte
         @SuppressLint("SetTextI18n")
         fun bind(position: Int, item:JSONObject, context: Context) {
             Log.d("TAG", item.toString())
+            if (!isRemovable){
+                removeButton.visibility = View.GONE
+            }
+
             removeButton.setOnClickListener {
                     for (i in 0 until items.length()) {
                         if (items.getJSONObject(i).getInt("id") == item.getInt("id")) {

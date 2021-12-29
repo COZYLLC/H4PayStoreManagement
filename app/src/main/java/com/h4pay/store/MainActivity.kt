@@ -52,7 +52,6 @@ fun showServerError(context: Activity) {
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
-    private lateinit var time:TextView
 
     private lateinit var edit: EditText
     private lateinit var recyclerView: RecyclerView
@@ -66,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var exchangeButton: LinearLayout
 
     private lateinit var cameraScan: LinearLayout
+    private lateinit var clearId: ImageButton
     private lateinit var cameraScanCircle: ImageButton
 
     private lateinit var callDeveloperButton:LinearLayout
@@ -150,7 +150,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun UiInit() {
-        time = findViewById(R.id.time)
         edit = findViewById(R.id.orderIdInput)
         orderUidTextView = findViewById(R.id.order_uid)
         orderDateTextView = findViewById(R.id.order_date)
@@ -159,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         orderExchangedTextView = findViewById(R.id.order_exchanged)
         exchangeButton = findViewById(R.id.exchangeButton)
         cameraScan = findViewById(R.id.cameraScan)
+        clearId = findViewById(R.id.clearId)
         cameraScanCircle = findViewById(R.id.cameraScanCircle)
         callDeveloperButton = findViewById(R.id.callDeveloper)
         showInfoButton = findViewById(R.id.showInfo)
@@ -170,6 +170,9 @@ class MainActivity : AppCompatActivity() {
 
         cameraScan.setOnClickListener {
             initScan()
+        }
+        clearId.setOnClickListener {
+            edit.setText("")
         }
         cameraScanCircle.setOnClickListener {
             initScan()
@@ -337,24 +340,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
         })
-        val mHandler = Handler()
-        val thread = Thread(Runnable {
-            run {
-                while (true) {
-                    runOnUiThread {
-                        val cal = Calendar.getInstance()
-                        var min = cal.get(Calendar.MINUTE).toString()
-                        var hour = cal.get(Calendar.HOUR).toString()
-                        min = (if (min.toInt() < 10) "0" else "") + min
-                        hour = (if (hour.toInt() < 10) "0" else "") + hour
-
-                        time.setText("$hour : $min")
-                    }
-                    Thread.sleep(10000)
-                }
-            }
-        })
-        thread.start()
     }
 
     fun isGift(input: String): Boolean? {

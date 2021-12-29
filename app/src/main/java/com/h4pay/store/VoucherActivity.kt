@@ -2,12 +2,14 @@ package com.h4pay.store
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -68,6 +70,8 @@ class VoucherActivity : AppCompatActivity() {
             view.orderExchanged.text = "교환 됨"
             view.orderExchanged.background =
                 ContextCompat.getDrawable(this@VoucherActivity, R.drawable.rounded_red)
+            view.productArea.visibility = View.GONE
+
         } else if (exchanged == false) {
             view.orderExchanged.text = "교환 안됨"
             view.orderExchanged.background =
@@ -149,6 +153,13 @@ class VoucherActivity : AppCompatActivity() {
         view.cameraScanCircle.setOnClickListener {
             initScan()
         }
+        view.clearId.setOnClickListener {
+            view.idInput.setText("")
+        }
+        view.clearText.setOnClickListener {
+            view.productBarcode.setText("")
+            focusToBarcodeInput()
+        }
 
         fetchStoreStatus()
         val passedId = intent.getStringExtra("voucherId")
@@ -162,6 +173,7 @@ class VoucherActivity : AppCompatActivity() {
                 Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
                 return
             }
+
             loadVoucherDetail(
                 voucher.getJSONObject("issuer").getString("uid"),
                 voucher.getString("date"),
@@ -169,10 +181,15 @@ class VoucherActivity : AppCompatActivity() {
                 voucher.getInt("amount"),
                 voucher.getBoolean("exchanged")
             )
-            view.productBarcode.requestFocus()
+            if (!voucher.getBoolean("exchanged")) {
+                view.productArea.visibility = View.VISIBLE
+            }
+
             view.exchangeButton.setOnClickListener {
                 exchange()
             }
+
+            focusToBarcodeInput()
         }
 
         view.idInput.addTextChangedListener(object: TextWatcher {
@@ -202,9 +219,12 @@ class VoucherActivity : AppCompatActivity() {
                             voucher.getInt("amount"),
                             voucher.getBoolean("exchanged")
                         )
+                        if (!voucher.getBoolean("exchanged")) {
+                            view.productArea.visibility = View.VISIBLE
+                        }
 
                         p0!!.clear()
-                        view.productBarcode.requestFocus()
+                        focusToBarcodeInput()
                     }
                 }
 
@@ -225,8 +245,11 @@ class VoucherActivity : AppCompatActivity() {
                             "바코드로 제품 정보를 찾을 수 없어요. 정확히 스캔했는지 확인해주세요.",
                             Toast.LENGTH_SHORT
                         ).show()
+                        p0!!.clear()
+                        focusToBarcodeInput()
                         return // 오류 메시지 표시 후 리턴
                     }
+                    view.productArea.visibility = View.VISIBLE
 
                     addProductToItem(product.getInt("id"))
                     if (!view.itemsRecyclerView.isActivated) { // RecyclerView가 활성화 되지 않았으면
@@ -239,10 +262,25 @@ class VoucherActivity : AppCompatActivity() {
                     val totalAmount = calcTotalAmount()
 
                     view.totalAmount.text = "현재 사용 금액: ${moneyFormat.format(totalAmount)} 원"
+                    Thread {
+                        Thread.sleep(100)
+                        runOnUiThread {
+                            view.productBarcode.requestFocus()
+                        }
+                    }.start() //editText focus in
                 }
             }
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
         })
+    }
+
+    fun focusToBarcodeInput() {
+        Thread {
+            Thread.sleep(500)
+            runOnUiThread {
+                view.productBarcode.requestFocus()
+            }
+        }.start() //editText focus in
     }
 
     fun initRecyclerView() {
@@ -263,12 +301,8 @@ class VoucherActivity : AppCompatActivity() {
                 view.productBarcode.requestFocus()
             }
         }
-        Thread {
-            Thread.sleep(1000)
-            runOnUiThread {
-                view.productBarcode.requestFocus()
-            }
-        }.start() //editText focus in
+        focusToBarcodeInput()
+
     }
     fun findProductByBarcode(barcode: String) : JSONObject? {
        for (i in 0 until prodList.length()) {

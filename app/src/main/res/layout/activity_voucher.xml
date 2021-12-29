@@ -57,14 +57,15 @@
                     android:layout_weight="1" />
 
 
-                <TextView
+                <TextClock
                     android:id="@+id/time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:text="12:40"
+                    android:format24Hour="HH:mm"
                     android:textColor="@color/black"
-                    android:textSize="30dp"
+                    android:textSize="30sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -162,6 +163,18 @@
                                 android:windowSoftInputMode="stateHidden" >
                                 <requestFocus />
                             </EditText>
+
+                            <ImageButton
+                                android:id="@+id/clearId"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="5dp"
+                                android:background="@drawable/circle_button"
+                                android:src="@drawable/ic_baseline_delete_sweep_24"
+                                app:tint="@color/white">
+
+                            </ImageButton>
+
                             <ImageButton
                                 android:id="@+id/cameraScanCircle"
                                 android:layout_width="40dp"
@@ -308,6 +321,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -316,24 +330,44 @@
                     android:paddingStart="10dp">
 
                     <LinearLayout
+                        android:id="@+id/productArea"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/round_button"
                         android:orientation="vertical"
                         android:padding="10dp">
 
-                        <EditText
-                            android:id="@+id/productBarcode"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@+id/explain"
-                            android:ems="25"
-                            android:hint="@string/barcodeOfProduct"
-                            android:inputType="number"
-                            android:maxLength="25"
-                            android:textStyle="bold"
-                            android:windowSoftInputMode="stateHidden" />
-                        <TextView
+                            android:orientation="horizontal">
+                            <EditText
+                                android:id="@+id/productBarcode"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_below="@+id/explain"
+                                android:ems="25"
+                                android:hint="@string/barcodeOfProduct"
+                                android:inputType="number"
+                                android:maxLength="25"
+                                android:textStyle="bold"
+                                android:windowSoftInputMode="stateHidden" />
+
+                            <ImageButton
+                                android:id="@+id/clearText"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/circle_button"
+                                android:src="@drawable/ic_baseline_delete_sweep_24"
+                                app:tint="@color/white">
+
+                            </ImageButton>
+                        </LinearLayout>
+
+                        <TextView                    android:focusable="false"
+
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/productsToExchange"
@@ -342,6 +376,7 @@
 
 
                             <androidx.recyclerview.widget.RecyclerView
+                                android:focusable="false"
                                 android:id="@+id/itemsRecyclerView"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
@@ -349,11 +384,13 @@
                                 android:orientation="horizontal"
                                 android:windowSoftInputMode="stateHidden" />
                         <LinearLayout
+                            android:focusable="false"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="end">
                             <TextView
+                                android:focusable="false"
                                 android:id="@+id/totalAmount"
                                 android:textAlignment="textEnd"
                                 android:layout_width="wrap_content"
@@ -361,6 +398,7 @@
                                 android:layout_marginRight="10dp"
                                 />
                             <TextView
+                                android:focusable="false"
                                 android:id="@+id/voucherAmount"
                                 android:textAlignment="textStart"
                                 android:layout_width="wrap_content"
@@ -368,16 +406,6 @@
                                 />
 
                         </LinearLayout>
-
-
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
                         <LinearLayout
                             android:id="@+id/exchangeButton"
                             android:layout_width="match_parent"
@@ -400,7 +428,10 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
 
+
                     </LinearLayout>
+
+
                 </LinearLayout>
 
             </LinearLayout>
