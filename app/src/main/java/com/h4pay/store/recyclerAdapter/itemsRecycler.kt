@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -20,7 +21,11 @@ import java.lang.Exception
 import java.text.NumberFormat
 
 
-class itemsRecycler( private val isRemovable:Boolean, private val context: Context, private var items: JSONArray) : RecyclerView.Adapter<itemsRecycler.Holder>() {
+class itemsRecycler(
+    private val isMutable: Boolean,
+    private val context: Context,
+    private var items: JSONArray
+) : RecyclerView.Adapter<itemsRecycler.Holder>() {
 
     private val TAG = "[DEBUG]"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -29,7 +34,7 @@ class itemsRecycler( private val isRemovable:Boolean, private val context: Conte
     }
 
     interface OnItemClickListner {
-        fun onItemClick(v:View, positon:Int){
+        fun onItemClick(v: View, positon: Int) {
 
         }
     }
@@ -40,14 +45,15 @@ class itemsRecycler( private val isRemovable:Boolean, private val context: Conte
         notifyDataSetChanged()
     }
 
-    private var mListner:OnItemClickListner? = null;
+    private var mListner: OnItemClickListner? = null;
 
-    fun setOnItemClickListner(listner:OnItemClickListner){
+    fun setOnItemClickListner(listner: OnItemClickListner) {
         this.mListner = listner
     }
-   fun getItems() : JSONArray {
+
+    fun getItems(): JSONArray {
         return items;
-   }
+    }
 
     override fun getItemCount(): Int {
         Log.d(TAG, "getItemCount called, ${items.length()} items")
@@ -63,35 +69,67 @@ class itemsRecycler( private val isRemovable:Boolean, private val context: Conte
         val pName = itemView.findViewById<TextView>(R.id.pName)
         val pImage = itemView.findViewById<ImageView>(R.id.pImage)
         val amount = itemView.findViewById<TextView>(R.id.rec_amount)
-        val removeButton = itemView.findViewById<FloatingActionButton>(R.id.removeButton)
+        val delButton = itemView.findViewById<FloatingActionButton>(R.id.delButton)
+        val addButton = itemView.findViewById<FloatingActionButton>(R.id.addButton)
+        val delProductButton = itemView.findViewById<FloatingActionButton>(R.id.delProductButton)
+
         @SuppressLint("SetTextI18n")
-        fun bind(position: Int, item:JSONObject, context: Context) {
+        fun bind(position: Int, item: JSONObject, context: Context) {
             Log.d("TAG", item.toString())
-            if (!isRemovable){
-                removeButton.visibility = View.GONE
+            if (!isMutable) {
+                delButton.visibility = View.GONE
+                addButton.visibility = View.GONE
             }
 
-            removeButton.setOnClickListener {
-                    for (i in 0 until items.length()) {
-                        if (items.getJSONObject(i).getInt("id") == item.getInt("id")) {
-                            if (item.getInt("qty") > 1) {
-                                items.remove(position)
-                                val currentQty = item.getInt("qty")
-                                item.remove("qty")
-                                item.put("qty", currentQty - 1)
-                                items.put(item)
-                                notifyItemChanged(position)
-                                (itemView.context as VoucherActivity)
-                                    .onRecyclerDelButtonClicked()
-                            } else if (item.getInt("qty") == 1) {
-                                items.remove(position)
-                                notifyItemRemoved(position);
-                                (itemView.context as VoucherActivity)
-                                    .onRecyclerDelButtonClicked()
-                            }
-                            return@setOnClickListener
+            delButton.setOnClickListener {
+                for (i in 0 until items.length()) {
+                    if (items.getJSONObject(i).getInt("id") == item.getInt("id")) {
+                        if (item.getInt("qty") > 1) {
+                            items.remove(position)
+                            val currentQty = item.getInt("qty")
+                            item.remove("qty")
+                            item.put("qty", currentQty - 1)
+                            items.put(item)
+                            notifyItemChanged(position)
+                            (itemView.context as VoucherActivity)
+                                .onRecyclerDataChanged()
+                        } else if (item.getInt("qty") == 1) {
+                            items.remove(position)
+                            notifyItemRemoved(position);
+                            (itemView.context as VoucherActivity)
+                                .onRecyclerDataChanged()
                         }
+                        return@setOnClickListener
                     }
+                }
+            }
+            addButton.setOnClickListener {
+                if (item.getInt("qty") >= 100) {
+                    Toast.makeText(context, "한 제품 당 최대 갯수는 100개 입니다!", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                for (i in 0 until items.length()) {
+                    if ( items.getJSONObject(i).getInt("id") == item.getInt("id")) {
+                        items.remove(position)
+                        val currentQty = item.getInt("qty")
+                        item.remove("qty")
+                        item.put("qty", currentQty + 1)
+                        items.put(item)
+                        notifyItemChanged(position)
+                        (itemView.context as VoucherActivity)
+                            .onRecyclerDataChanged()
+                    }
+                }
+            }
+            delProductButton.setOnClickListener {
+                for (i in 0 until items.length()) {
+                    if (items.getJSONObject(i).getInt("id") == item.getInt("id")) {
+                        items.remove(position);
+                        notifyItemRemoved(position);
+                        (itemView.context as VoucherActivity)
+                            .onRecyclerDataChanged()
+                    }
+                }
             }
             val gotName = prodList.getJSONObject(item.getInt("id")).getString("productName")
             val gotAmount = " " + (item.getInt("qty")).toString() + " 개"
@@ -111,7 +149,8 @@ class itemsRecycler( private val isRemovable:Boolean, private val context: Conte
                 }
             }
         }
-        fun add(position:Int, item:JSONObject) {
+
+        fun add(position: Int, item: JSONObject) {
             items.put(item)
             notifyItemInserted(position)
         }

@@ -48,7 +48,17 @@ class VoucherActivity : AppCompatActivity() {
     private lateinit var recyclerAdapter: itemsRecycler
     private lateinit var voucherId:String
     private var item = JSONObject()
-    private var voucher = JSONObject()
+    private var voucher:JSONObject? = JSONObject()
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null && result.contents != null) {
+            view.idInput.setText(result.contents)
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+
+    }
 
     fun loadVoucherDetail(
         uid: String?,
@@ -158,7 +168,6 @@ class VoucherActivity : AppCompatActivity() {
         }
         view.clearText.setOnClickListener {
             view.productBarcode.setText("")
-            focusToBarcodeInput()
         }
 
         fetchStoreStatus()
@@ -168,20 +177,26 @@ class VoucherActivity : AppCompatActivity() {
             voucherId = passedId
             view.idInput.setText(passedId)
             val voucherResult = Get("${BuildConfig.API_URL}/voucher/filter?id=${voucherId}").execute().get()!!
-            voucher = if (voucherResult.getBoolean("status") ) voucherResult.getJSONArray("result").getJSONObject(0) else JSONObject()
-            if (voucher == null) {
+            if (voucherResult.getBoolean("status")) {
+                val vouchers = voucherResult.getJSONArray("result")
+                if (vouchers.length() == 0) {
+                    Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                voucher = vouchers.getJSONObject(0)
+            } else {
                 Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
                 return
             }
 
             loadVoucherDetail(
-                voucher.getJSONObject("issuer").getString("uid"),
-                voucher.getString("date"),
-                voucher.getString("expire"),
-                voucher.getInt("amount"),
-                voucher.getBoolean("exchanged")
+                voucher!!.getJSONObject("issuer").getString("uid"),
+                voucher!!.getString("date"),
+                voucher!!.getString("expire"),
+                voucher!!.getInt("amount"),
+                voucher!!.getBoolean("exchanged")
             )
-            if (!voucher.getBoolean("exchanged")) {
+            if (!voucher!!.getBoolean("exchanged")) {
                 view.productArea.visibility = View.VISIBLE
             }
 
@@ -189,7 +204,6 @@ class VoucherActivity : AppCompatActivity() {
                 exchange()
             }
 
-            focusToBarcodeInput()
         }
 
         view.idInput.addTextChangedListener(object: TextWatcher {
@@ -205,26 +219,33 @@ class VoucherActivity : AppCompatActivity() {
                             finish()
                             return
                         }
+                        Log.d("BARCODE",barcode)
                         val voucherResult = Get("${BuildConfig.API_URL}/voucher/filter?id=${barcode}").execute().get()!!
-                        voucher = if (voucherResult.getBoolean("status") ) voucherResult.getJSONArray("result").getJSONObject(0) else JSONObject()
-                        if (voucher == null) {
+                        if (voucherResult.getBoolean("status")) {
+                            val vouchers = voucherResult.getJSONArray("result")
+                            if (vouchers.length() == 0) {
+                                Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
+                                return
+                            }
+                            voucher = vouchers.getJSONObject(0)
+                        } else {
                             Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
                             return
                         }
+
                         voucherId = barcode
                         loadVoucherDetail(
-                            voucher.getJSONObject("issuer").getString("uid"),
-                            voucher.getString("date"),
-                            voucher.getString("expire"),
-                            voucher.getInt("amount"),
-                            voucher.getBoolean("exchanged")
+                            voucher!!.getJSONObject("issuer").getString("uid"),
+                            voucher!!.getString("date"),
+                            voucher!!.getString("expire"),
+                            voucher!!.getInt("amount"),
+                            voucher!!.getBoolean("exchanged")
                         )
-                        if (!voucher.getBoolean("exchanged")) {
+                        if (!voucher!!.getBoolean("exchanged")) {
                             view.productArea.visibility = View.VISIBLE
                         }
 
                         p0!!.clear()
-                        focusToBarcodeInput()
                     }
                 }
 
@@ -246,7 +267,6 @@ class VoucherActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                         p0!!.clear()
-                        focusToBarcodeInput()
                         return // 오류 메시지 표시 후 리턴
                     }
                     view.productArea.visibility = View.VISIBLE
@@ -274,15 +294,6 @@ class VoucherActivity : AppCompatActivity() {
         })
     }
 
-    fun focusToBarcodeInput() {
-        Thread {
-            Thread.sleep(500)
-            runOnUiThread {
-                view.productBarcode.requestFocus()
-            }
-        }.start() //editText focus in
-    }
-
     fun initRecyclerView() {
         val lm = LinearLayoutManager(this@VoucherActivity, LinearLayoutManager.HORIZONTAL, false)
         val recyclerView = view.itemsRecyclerView
@@ -301,7 +312,6 @@ class VoucherActivity : AppCompatActivity() {
                 view.productBarcode.requestFocus()
             }
         }
-        focusToBarcodeInput()
 
     }
     fun findProductByBarcode(barcode: String) : JSONObject? {
@@ -340,11 +350,11 @@ class VoucherActivity : AppCompatActivity() {
     fun exchange() {
         val totalAmount = calcTotalAmount()
 
-        if (totalAmount > voucher.getInt("amount")) { // 선택한 제품 금액 총합보다 액면가가 작으면
+        if (totalAmount > voucher!!.getInt("amount")) { // 선택한 제품 금액 총합보다 액면가가 작으면
             // 교환이 불가하다는 메시지를 띄운다.
             Toast.makeText(this@VoucherActivity, "액면가보다 선택한 제품의 총 금액이 더 많습니다. 제거해주세요.", Toast.LENGTH_SHORT).show()
             return
-        } else if (totalAmount < voucher.getInt("amount") * 0.6){ // 선택한 제품 금액 총합이 액면가의 60%보다 작으면
+        } else if (totalAmount < voucher!!.getInt("amount") * 0.6){ // 선택한 제품 금액 총합이 액면가의 60%보다 작으면
             // 교환이 불가하다는 메시지를 띄운다.
             Toast.makeText(this@VoucherActivity, "액면가의 60% 이상을 사용해야 합니다.", Toast.LENGTH_SHORT).show()
             return
@@ -365,7 +375,7 @@ class VoucherActivity : AppCompatActivity() {
         }
     }
 
-    fun onRecyclerDelButtonClicked() {
+    fun onRecyclerDataChanged() {
         item = itemArrayToJson(recyclerAdapter.getItems())
         Log.d("RECYCLER", item.toString())
         view.totalAmount.text = "현재 사용 금액: ${moneyFormat.format(calcTotalAmount())} 원"
