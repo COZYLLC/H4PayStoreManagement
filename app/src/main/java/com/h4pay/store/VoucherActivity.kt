@@ -2,31 +2,37 @@ package com.h4pay.store
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.opengl.Visibility
-import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.JsonObject
 import com.google.zxing.integration.android.IntentIntegrator
 import com.h4pay.store.databinding.ActivityVoucherBinding
-import com.h4pay.store.networking.Get
-import com.h4pay.store.networking.Post
+import com.h4pay.store.model.Product
+import com.h4pay.store.model.Voucher
+import com.h4pay.store.networking.H4PayService
+import com.h4pay.store.networking.tools.networkInterceptor
 import com.h4pay.store.recyclerAdapter.itemsRecycler
+import com.h4pay.store.util.isOnScreenKeyboardEnabled
 import com.h4pay.store.util.itemArrayToJson
 import com.h4pay.store.util.itemJsonToArray
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Exception
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -44,11 +50,24 @@ val moneyFormat: NumberFormat = DecimalFormat("#,###")
 
 
 class VoucherActivity : AppCompatActivity() {
-    private lateinit var view:ActivityVoucherBinding
+    private lateinit var view: ActivityVoucherBinding
     private lateinit var recyclerAdapter: itemsRecycler
-    private lateinit var voucherId:String
-    private var item = JSONObject()
-    private var voucher:JSONObject? = JSONObject()
+    private lateinit var voucherId: String
+    private lateinit var h4payService: H4PayService
+    private var item = JsonObject()
+
+
+    private fun initService() {
+        val client = OkHttpClient.Builder()
+            .addNetworkInterceptor(networkInterceptor)
+            .build()
+        val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl("${BuildConfig.API_URL}/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+        h4payService = retrofit.create(H4PayService::class.java)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
@@ -61,97 +80,77 @@ class VoucherActivity : AppCompatActivity() {
     }
 
     fun loadVoucherDetail(
-        uid: String?,
-        date: String?,
-        expire: String?,
-        amount: Int?,
-        exchanged: Boolean?
+        voucher: Voucher
     ) {
-        ISODateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        KoreanDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val prettifiedDate = ISODateFormat.parse(date)
-        val prettifiedExpire = ISODateFormat.parse(expire)
+        view.orderUid.text = voucher.receiver.tel
+        view.orderDate.text = KoreanDateFormat.format(voucher.date)
+        view.orderExpire.text = KoreanDateFormat.format(voucher.expire)
+        view.orderExchanged.text = if (voucher.exchanged) "교환 됨" else "교환 안됨"
+        val backgroundDrawable =
+            if (voucher.exchanged) R.drawable.rounded_red else R.drawable.rounded_green
+        view.orderExchanged.background =
+            ContextCompat.getDrawable(this@VoucherActivity, backgroundDrawable)
 
-        view.orderUid.text = uid
-        view.orderDate.text = KoreanDateFormat.format(prettifiedDate)
-        view.orderExpire.text = KoreanDateFormat.format(prettifiedExpire)
-
-        if (exchanged == true) {
-            view.orderExchanged.text = "교환 됨"
-            view.orderExchanged.background =
-                ContextCompat.getDrawable(this@VoucherActivity, R.drawable.rounded_red)
-            view.productArea.visibility = View.GONE
-
-        } else if (exchanged == false) {
-            view.orderExchanged.text = "교환 안됨"
-            view.orderExchanged.background =
-                ContextCompat.getDrawable(this@VoucherActivity, R.drawable.rounded_green)
+        view.voucherAmount.text = "상품권 금액: ${moneyFormat.format(voucher.amount)} 원"
+        if (!voucher.exchanged) {
+            view.productArea.visibility = View.VISIBLE
         }
-        view.voucherAmount.text = "상품권 금액: ${moneyFormat.format(amount)} 원"
-
         view.exchangeButton.setOnClickListener {
-            exchange()
+            exchange(voucher)
         }
-    }
-
-    fun fetchStoreStatus() {
-        val status: JSONObject? = Get("${BuildConfig.API_URL}/store").execute().get()
-        if (status == null) {
-            showServerError(this)
-            return
-        } else {
-            view.openStatus.isChecked = status.getBoolean("isOpened")
-            when (status.getBoolean("isOpened")) {
-                true -> {
-                    view.openStatusText.text = "OPEN"
-                    view.usable.isVisible = true
-                    view.openWarning.isVisible = false
-                }
-                false -> {
-                    view.openStatusText.text = "CLOSED"
-                    view.usable.isVisible = false
-                    view.openWarning.isVisible = true
-                }
-            }
-        }
-        view.openStatus.setOnCheckedChangeListener {
-            val status = JSONObject()
-            status.put("isOpened", it)
-            val result: JSONObject? =
-                Post("${BuildConfig.API_URL}/store/change", status).execute().get()
-            if (result == null) {
-                showServerError(this)
-                return@setOnCheckedChangeListener
-            } else {
-                if (!result.getBoolean("status")) {
-                    Toast.makeText(this, "상태 변경에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "상태가 변경되었습니다.", Toast.LENGTH_SHORT).show()
-                    when (it) {
-                        true -> {
-                            view.openStatusText.text = "OPEN"
-                            view.usable.isVisible = true
-                            view.openWarning.isVisible = false
-                        }
-                        false -> {
-                            view.openStatusText.text = "CLOSED"
-                            view.usable.isVisible = false
-                            view.openWarning.isVisible = true
-                        }
-                    }
+        view.openStatus.setOnCheckedChangeListener { _, isOpened ->
+            lifecycleScope.launch {
+                kotlin.runCatching {
+                    val requestBody = JsonObject()
+                    requestBody.addProperty("isOpened", isOpened)
+                    h4payService.changeStoreStatus(requestBody)
+                }.onSuccess {
+                    Log.e("VoucherActivity", it.toString())
+                    setStoreStatus(it)
+                }.onFailure {
+                    showServerError(this@VoucherActivity)
                 }
             }
         }
     }
 
-    fun initScan() {
+    private fun fetchStoreStatus() {
+        lifecycleScope.launch {
+            kotlin.runCatching {
+                h4payService.getStoreStatus()
+            }.onSuccess {
+                setStoreStatus(it)
+            }.onFailure {
+                Log.e("Voucher", it.toString())
+                showServerError(this@VoucherActivity)
+                return@launch
+            }
+        }
+    }
+
+    private fun setStoreStatus(isOpened: Boolean) {
+        view.openStatus.isChecked = isOpened
+        view.usable.isGone = !isOpened // 열려있지 않으면 사라지게
+        //view.openWarning.isGone = isOpened
+        view.openStatusText.text = if (isOpened) "OPEN" else "CLOSED"
+    }
+
+    private fun initScan() {
         val intentIntegrator = IntentIntegrator(this)
         intentIntegrator.initiateScan()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        view = DataBindingUtil.setContentView(this, R.layout.activity_voucher)
+    private fun openImm() {
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+            .showInputMethodPicker()
+        Toast.makeText(
+            this,
+            "\"스크린 키보드\" 옵션이 켜져있어 가상 키보드가 올라옵니다. 해당 옵션을 꺼주세요.",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    private fun initUI() {
         view.switchToPurchase.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
@@ -169,90 +168,113 @@ class VoucherActivity : AppCompatActivity() {
         view.clearText.setOnClickListener {
             view.productBarcode.setText("")
         }
+        view.idInput.setOnFocusChangeListener { _, hasFocus ->
+            lifecycleScope.launch {
+                delay(keyboardDetectDelay)
+                if (hasFocus && !isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+                    openImm()
+                }
+            }
+        }
+        view.productBarcode.setOnFocusChangeListener { _, hasFocus ->
+            lifecycleScope.launch {
+                delay(keyboardDetectDelay)
+                if (hasFocus && !isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+                    openImm()
+                }
+            }
+        }
+        view.openStatus.setOnCheckedChangeListener { _, isChecked: Boolean ->
+            val body = JsonObject()
+            body.addProperty("isOpened", isChecked)
+            lifecycleScope.launch {
+                kotlin.runCatching {
+                    h4payService.changeStoreStatus(body)
+                }.onSuccess {
+                    setStoreStatus(it)
+                }.onFailure {
+                    Toast.makeText(
+                        this@VoucherActivity,
+                        "매점 개폐점 상태를 설정하지 못했습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ISODateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        KoreanDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+        view = DataBindingUtil.setContentView(this, R.layout.activity_voucher)
+        initUI()
+        initService()
 
         fetchStoreStatus()
         val passedId = intent.getStringExtra("voucherId")
-
         if (passedId != null) {
             voucherId = passedId
             view.idInput.setText(passedId)
-            val voucherResult = Get("${BuildConfig.API_URL}/voucher/filter?id=${voucherId}").execute().get()!!
-            if (voucherResult.getBoolean("status")) {
-                val vouchers = voucherResult.getJSONArray("result")
-                if (vouchers.length() == 0) {
-                    Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
-                    return
+            lifecycleScope.launch {
+                kotlin.runCatching {
+                    h4payService.getVoucherDetail(voucherId)
+                }.onSuccess {
+                    if (it.isEmpty()) {
+                        Toast.makeText(
+                            this@VoucherActivity,
+                            "상품권 정보를 불러올 수 없어요.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@onSuccess
+                    } else {
+                        loadVoucherDetail(it[0])
+                    }
                 }
-                voucher = vouchers.getJSONObject(0)
-            } else {
-                Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
-                return
             }
-
-            loadVoucherDetail(
-                voucher!!.getJSONObject("issuer").getString("uid"),
-                voucher!!.getString("date"),
-                voucher!!.getString("expire"),
-                voucher!!.getInt("amount"),
-                voucher!!.getBoolean("exchanged")
-            )
-            if (!voucher!!.getBoolean("exchanged")) {
-                view.productArea.visibility = View.VISIBLE
-            }
-
-            view.exchangeButton.setOnClickListener {
-                exchange()
-            }
-
         }
 
-        view.idInput.addTextChangedListener(object: TextWatcher {
+        view.idInput.addTextChangedListener(object : TextWatcher {
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(p0: Editable?) {
                 val barcode = p0.toString()
                 Log.d("TAG", barcode.startsWith("3").toString())
-                    if (barcode.length == 25) {
-                        if (!barcode.startsWith("3")) {
-                            val mainIntent = Intent(this@VoucherActivity, MainActivity::class.java);
-                            mainIntent.putExtra("orderId", barcode)
-                            startActivity(mainIntent)
-                            finish()
-                            return
-                        }
-                        Log.d("BARCODE",barcode)
-                        val voucherResult = Get("${BuildConfig.API_URL}/voucher/filter?id=${barcode}").execute().get()!!
-                        if (voucherResult.getBoolean("status")) {
-                            val vouchers = voucherResult.getJSONArray("result")
-                            if (vouchers.length() == 0) {
-                                Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
-                                return
-                            }
-                            voucher = vouchers.getJSONObject(0)
-                        } else {
-                            Toast.makeText(this@VoucherActivity, "상품권 정보를 불러올 수 없어요.", Toast.LENGTH_SHORT).show()
-                            return
-                        }
-
-                        voucherId = barcode
-                        loadVoucherDetail(
-                            voucher!!.getJSONObject("issuer").getString("uid"),
-                            voucher!!.getString("date"),
-                            voucher!!.getString("expire"),
-                            voucher!!.getInt("amount"),
-                            voucher!!.getBoolean("exchanged")
-                        )
-                        if (!voucher!!.getBoolean("exchanged")) {
-                            view.productArea.visibility = View.VISIBLE
-                        }
-
-                        p0!!.clear()
+                if (barcode.length == 25) {
+                    if (!barcode.startsWith("3")) {
+                        val mainIntent = Intent(this@VoucherActivity, MainActivity::class.java);
+                        mainIntent.putExtra("orderId", barcode)
+                        startActivity(mainIntent)
+                        finish()
+                        return
                     }
+                    Log.d("BARCODE", barcode)
+                    lifecycleScope.launch {
+                        kotlin.runCatching {
+                            h4payService.getVoucherDetail(barcode)
+                        }.onSuccess {
+                            if (it.isEmpty()) {
+                                Toast.makeText(
+                                    this@VoucherActivity,
+                                    "상품권 정보를 불러올 수 없어요.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@onSuccess
+                            } else {
+                                loadVoucherDetail(it[0])
+                                voucherId = barcode
+                            }
+                        }
+                    }
+
+                    p0!!.clear()
                 }
+            }
 
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
         })
 
-        view.productBarcode.addTextChangedListener(object: TextWatcher {
+        view.productBarcode.addTextChangedListener(object : TextWatcher {
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
 
             @SuppressLint("SetTextI18n")
@@ -271,9 +293,13 @@ class VoucherActivity : AppCompatActivity() {
                     }
                     view.productArea.visibility = View.VISIBLE
 
-                    addProductToItem(product.getInt("id"))
+                    addProductToItem(product.id)
                     if (!view.itemsRecyclerView.isActivated) { // RecyclerView가 활성화 되지 않았으면
-                        recyclerAdapter = itemsRecycler(true, this@VoucherActivity, itemJsonToArray(item)) // 리사이클러 어댑터를 생성하고
+                        recyclerAdapter = itemsRecycler(
+                            true,
+                            this@VoucherActivity,
+                            itemJsonToArray(item)
+                        ) // 리사이클러 어댑터를 생성하고
                         initRecyclerView() // init한다.
                     } else { // 활성화 되어 있으면
                         recyclerAdapter.changeItems(itemJsonToArray(item)) // 어댑터의 아이템을 모두 변경해준다.
@@ -290,6 +316,7 @@ class VoucherActivity : AppCompatActivity() {
                     }.start() //editText focus in
                 }
             }
+
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
         })
     }
@@ -314,63 +341,76 @@ class VoucherActivity : AppCompatActivity() {
         }
 
     }
-    fun findProductByBarcode(barcode: String) : JSONObject? {
-       for (i in 0 until prodList.length()) {
-           try {
-               if (prodList.getJSONObject(i).getString("barcode") == barcode) {
-                   return prodList.getJSONObject(i)
-               }
-           } catch (e: Exception) {
 
-           }
-
-       }
+    fun findProductByBarcode(barcode: String): Product? {
+        for (i in prodList.indices) {
+            try {
+                if (prodList[i].barcode == barcode) {
+                    return prodList[i]
+                }
+            } catch (e: Exception) {
+                return null
+            }
+        }
         return null
     }
-    fun addProductToItem(productId:Int) {
+
+    fun addProductToItem(productId: Int) {
         if (item.has(productId.toString())) { // 해당 제품이 존재하면
-            val qty:Int = item[productId.toString()] as Int // 해당 제품의 수를 가져와
-            item.put(productId.toString(), qty + 1) // 1을 더한 것을 저장한다
+            val qty: Int = item[productId.toString()].asInt // 해당 제품의 수를 가져와
+            item.addProperty(productId.toString(), qty + 1) // 1을 더한 것을 저장한다
         } else {
-            item.put(productId.toString(), 1) // 그 외의 경우에는 해당 제품의 개수를 1로 지정한다
+            item.addProperty(productId.toString(), 1) // 그 외의 경우에는 해당 제품의 개수를 1로 지정한다
         }
         return
     }
-    fun calcTotalAmount() : Int {
-        var totalAmount:Int = 0;
-            item.keys().forEach { // 모든 추가된 품목들에 대해
-                for (j in 0 until prodList.length()) {
-                    if (prodList.getJSONObject(j).getInt("id") == Integer.parseInt(it)) { // 제품 배열에서 id가 일치하는 것을 찾아
-                        totalAmount += item.getInt(it) * prodList.getJSONObject(j).getInt("price") // 제품의 가격과 해당 제품이 담긴 갯수를 곱해 totalAmount에 더한다
-                    }
+
+    fun calcTotalAmount(): Int {
+        var totalAmount: Int = 0;
+        item.keySet().forEach { // 모든 추가된 품목들에 대해
+            for (j in prodList.indices) {
+                if (prodList[j].id == Integer.parseInt(it)) { // 제품 배열에서 id가 일치하는 것을 찾아
+                    totalAmount += item[it].asInt * prodList[j].price // 제품의 가격과 해당 제품이 담긴 갯수를 곱해 totalAmount에 더한다
                 }
             }
+        }
         return totalAmount
     }
-    fun exchange() {
+
+    fun exchange(voucher: Voucher) {
         val totalAmount = calcTotalAmount()
 
-        if (totalAmount > voucher!!.getInt("amount")) { // 선택한 제품 금액 총합보다 액면가가 작으면
+        if (totalAmount > voucher.amount) { // 선택한 제품 금액 총합보다 액면가가 작으면
             // 교환이 불가하다는 메시지를 띄운다.
-            Toast.makeText(this@VoucherActivity, "액면가보다 선택한 제품의 총 금액이 더 많습니다. 제거해주세요.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this@VoucherActivity,
+                "액면가보다 선택한 제품의 총 금액이 더 많습니다. 제거해주세요.",
+                Toast.LENGTH_SHORT
+            ).show()
             return
-        } else if (totalAmount < voucher!!.getInt("amount") * 0.6){ // 선택한 제품 금액 총합이 액면가의 60%보다 작으면
+        } else if (totalAmount < voucher.amount * 0.6) { // 선택한 제품 금액 총합이 액면가의 60%보다 작으면
             // 교환이 불가하다는 메시지를 띄운다.
-            Toast.makeText(this@VoucherActivity, "액면가의 60% 이상을 사용해야 합니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@VoucherActivity, "액면가의 60% 이상을 사용해야 합니다.", Toast.LENGTH_SHORT)
+                .show()
             return
         } else {
-            val data = JSONObject()
-            data.put("id", voucherId);
-            data.put("item", item)
-            val exchangeResult = Post("${BuildConfig.API_URL}/voucher/exchange", data).execute().get()
-            val status = exchangeResult.getBoolean("status")
-            if (status) {
-                Toast.makeText(this, "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, VoucherActivity::class.java)
-                startActivity(intent)
-                finish()
-            } else {
-                Toast.makeText(this, "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            val requestBody = JsonObject()
+            requestBody.addProperty("id", voucher.id)
+            requestBody.add("item", item)
+            lifecycleScope.launch {
+                kotlin.runCatching {
+                    h4payService.exchangeVoucher(requestBody)
+                }.onSuccess {
+                    Toast.makeText(this@VoucherActivity, "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
+                        .show()
+                    val intent = Intent(this@VoucherActivity, VoucherActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }.onFailure {
+                    Toast.makeText(this@VoucherActivity, "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
+                        .show()
+                    return@onFailure
+                }
             }
         }
     }

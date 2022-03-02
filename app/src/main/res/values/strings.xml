@@ -39,4 +39,9 @@
     <string name="scanBarcodeOrInput">바코드를 스캔하거나 일련번호를 직접 입력해주세요.</string>
     <string name="switchToVoucher">상품권 사용하기</string>
     <string name="usePurchase">교환권 사용</string>
+    <string name="signin">로그인</string>
+    <string name="signout">로그아웃</string>
+    <string name="schoolSelect">학교 선택</string>
+    <string name="passwordInput">비밀번호</string>
+    <string name="gotodashboard">관리도구로 이동하기</string>
 </resources>

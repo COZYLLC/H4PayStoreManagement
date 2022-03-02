@@ -31,8 +31,8 @@ class CallDeveloper : AppCompatActivity() {
 
         uploadButton.setOnClickListener {
             val intent = Intent()
-            intent.setType("image/*")
-            intent.setAction(Intent.ACTION_GET_CONTENT)
+            intent.type = "image/*"
+            intent.action = Intent.ACTION_GET_CONTENT
             startActivityForResult(intent, 1)
         }
 
@@ -46,9 +46,9 @@ class CallDeveloper : AppCompatActivity() {
                 Toast.makeText(this, "제출이 완료되었습니다.", Toast.LENGTH_SHORT).show()
                 makeEmpty()
             }
-
         }
     }
+
     fun makeEmpty() {
         titleInput.setText("")
         contentInput.setText("")

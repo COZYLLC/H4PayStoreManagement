@@ -40,12 +40,15 @@
 
                     android:orientation="vertical">
 
-                    <com.jtv7.rippleswitchlib.RippleSwitch
+                    <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/openStatus"
                         android:layout_width="wrap_content"
-                        android:layout_height="30dp"
-
-                        app:rs_checked_color="#4F83D6" />
+                        android:layout_height="0dp"
+                        android:checked="true"
+                        android:gravity="center"
+                        android:thumb="@drawable/shape_switch_thumb"
+                        app:switchMinWidth="50dp"
+                        app:track="@drawable/selector_switch" />
 
                     <TextView
                         android:id="@+id/openStatusText"
@@ -417,11 +420,11 @@
                                 android:text="@string/productsToExchange"
                                 android:textSize="30dp"
                                 android:textStyle="bold" />
+
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:descendantFocusability="blocksDescendants"
-                                >
+                                android:descendantFocusability="blocksDescendants">
 
                                 <androidx.recyclerview.widget.RecyclerView
 
@@ -433,7 +436,6 @@
                                     android:orientation="horizontal"
                                     android:windowSoftInputMode="stateHidden" />
                             </LinearLayout>
-
 
 
                             <LinearLayout
@@ -528,12 +530,11 @@
             <ImageView
                 android:layout_width="100dp"
                 android:layout_height="50dp"
-
+                android:layout_marginEnd="20dp"
                 android:src="@drawable/cozy"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     </LinearLayout>
 </layout>

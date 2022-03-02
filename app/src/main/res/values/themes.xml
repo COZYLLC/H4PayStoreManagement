@@ -48,6 +48,10 @@
         <item name="android:textSize">30sp</item>
     </style>
 
+    <style name="InputTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorAccent">#4F83D6</item>
+    </style>
+
     <style name="AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
         <item name="colorPrimary">#000000</item>
         <item name="colorPrimaryDark">#000000</item>

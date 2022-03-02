@@ -46,11 +46,7 @@
             android:exported="true"
             android:windowSoftInputMode ="adjustNothing"
             android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <activity
@@ -59,7 +55,14 @@
             android:theme="@style/Theme.H4PayStoreManagement"
             android:screenOrientation="landscape"/>
         <activity android:name=".H4PayInfo" android:screenOrientation="landscape" />
-        <activity android:name=".VoucherActivity" android:screenOrientation="landscape" />
+        <activity android:name=".VoucherActivity" android:screenOrientation="landscape" android:exported="true" />
+        <activity android:name=".LoginActivity" android:screenOrientation="landscape" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
     </application>
 

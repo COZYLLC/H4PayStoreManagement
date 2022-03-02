@@ -1,9 +1,7 @@
 package com.h4pay.store
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
-import android.app.Application
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
@@ -14,25 +12,26 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.annotations.SerializedName
+import com.h4pay.store.model.Version
 import com.h4pay.store.networking.Get
+import com.h4pay.store.networking.H4PayService
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
 import kotlin.system.exitProcess
 
-class Version(val versionName: Double, val changes: String, val url: String) {
-
-}
-
 private val TAG = "UPDATER"
 private var mDownloadQueueId: Long? = null
 private var mFileName: String? = null
-private var lastestVersion: String? = null
-val permissionALL = 1
+private var latestVersion: String? = null
+const val permissionALL = 1
 val permissionList =
     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
 fun getRecentVersion(context: Context): Version? {
-    var jsonObject: JSONObject? = Get("${BuildConfig.API_URL}/version").execute().get()
+    var jsonObject: JSONObject? = Get("${BuildConfig.API_URL}/versions").execute().get()
     if (jsonObject == null) {
         AlertDialog.Builder(context)
             .setTitle("서버 오류")
@@ -45,7 +44,6 @@ fun getRecentVersion(context: Context): Version? {
         val url = result.getString("url")
         return Version(versionName = version, changes = changes, url = url)
     }
-    return null
 }
 
 fun updateChecker(context: Context): Version? {
@@ -57,7 +55,7 @@ fun updateChecker(context: Context): Version? {
         } else {
             return null;
         }
-    }catch (e:Exception) {
+    } catch (e: Exception) {
         Toast.makeText(context, "업데이트 검사에 실패했습니다. 앱을 종료합니다.", Toast.LENGTH_SHORT).show()
         return null;
     }
@@ -92,7 +90,7 @@ fun downloadApp(context: Context, version: Double, url: String) {
     mFileName = "h4pay_manager_" + versionStr[0] + "." + versionStr[1] + ".apk"
     mDownloadQueueId = mDownloadManager.enqueue(request)
     Log.e(TAG, mFileName + ", " + mDownloadQueueId.toString())
-    lastestVersion = version.toString().split("\\.".toRegex())[0] + "." + version.toString()
+    latestVersion = version.toString().split("\\.".toRegex())[0] + "." + version.toString()
         .split("\\.".toRegex())[1]
 }
 
@@ -105,7 +103,7 @@ private val mCompleteReceiver: BroadcastReceiver = object : BroadcastReceiver() 
             val apkUri = FileProvider.getUriForFile(
                 context,
                 "com.h4pay.store",
-                File(Environment.getExternalStorageDirectory().absolutePath + "/Download/h4pay_manager_$lastestVersion.apk")
+                File(Environment.getExternalStorageDirectory().absolutePath + "/Download/h4pay_manager_$latestVersion.apk")
             )
             Log.e(TAG, apkUri.toString())
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive")

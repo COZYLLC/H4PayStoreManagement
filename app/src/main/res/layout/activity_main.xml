@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -33,19 +35,22 @@
                 android:layout_gravity="center"
                 android:orientation="vertical">
 
-                <com.jtv7.rippleswitchlib.RippleSwitch
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/openStatus"
                     android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-
-                    app:rs_checked_color="#4F83D6" />
+                    android:layout_height="0dp"
+                    android:checked="true"
+                    android:gravity="center"
+                    android:thumb="@drawable/shape_switch_thumb"
+                    app:switchMinWidth="50dp"
+                    app:track="@drawable/selector_switch" />
 
                 <TextView
                     android:id="@+id/openStatusText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="OPEN"
+                    android:text=""
                     android:textSize="13dp" />
 
             </LinearLayout>
@@ -399,25 +404,56 @@
                     android:orientation="vertical">
 
                     <LinearLayout
-                        android:id="@+id/callDeveloper"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/shadow"
-                        android:orientation="horizontal"
-                        android:padding="10dp"
-                        android:textColor="@color/black">
+                        android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="match_parent"
+                        <LinearLayout
+                            android:id="@+id/callDeveloper"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="@string/callDeveloper"
-                            android:textAlignment="center"
-                            android:textColor="@color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/shadow"
+                            android:orientation="horizontal"
+                            android:padding="10dp"
+                            android:textColor="@color/black">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="@string/callDeveloper"
+                                android:textAlignment="center"
+                                android:textColor="@color/white"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:id="@+id/goToDashboard"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginStart="10dp"
+                            android:background="@drawable/shadow"
+                            android:orientation="horizontal"
+                            android:padding="10dp"
+                            android:textColor="@color/black">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="@string/gotodashboard"
+                                android:textAlignment="center"
+                                android:textColor="@color/white"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
+
+
 
                     <LinearLayout
                         android:id="@+id/showInfo"
@@ -460,7 +496,8 @@
             app:layout_constraintBottom_toTopOf="@+id/openStoreAlert"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+/>
 
         <TextView
             android:id="@+id/openStoreAlert"
@@ -477,7 +514,7 @@
         <ImageView
             android:layout_width="100dp"
             android:layout_height="50dp"
-
+            android:layout_marginEnd="20dp"
             android:src="@drawable/cozy"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -485,3 +522,4 @@
 
 
 </LinearLayout>
+</layout>
