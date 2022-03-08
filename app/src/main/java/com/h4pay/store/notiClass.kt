@@ -7,6 +7,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -83,7 +84,7 @@ class notiClass : FirebaseMessagingService() {
                 val intent = Intent(this, MainActivity::class.java)
                 intent.putExtra("category", category)
                 intent.putExtra("orderId", orderId)
-                pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                pendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_IMMUTABLE )
             }
 
             var notificationBuilder: NotificationCompat.Builder? = null

@@ -28,6 +28,7 @@ import com.h4pay.store.networking.H4PayService
 import com.h4pay.store.networking.tools.networkInterceptor
 import com.h4pay.store.networking.tools.permissionManager
 import com.h4pay.store.util.isOnScreenKeyboardEnabled
+import com.h4pay.store.util.openImm
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -94,8 +95,13 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        if (view.password.hasFocus() && !isOnScreenKeyboardEnabled(view.layout, resources.configuration)) {
-            openImm()
+        view.root.viewTreeObserver.addOnGlobalLayoutListener {
+            // View의 focus가 변경됐을 때를 observe.
+            if (isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+                Log.d("LoginActivity", "keyboard enabled")
+                openImm(this)
+            }
+
         }
     }
 
@@ -127,12 +133,11 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         view.schoolSpinner.setPopupBackgroundResource(R.drawable.round_button)
         view.schoolSpinner.setTitle("학교 선택")
 
-        view.password.setOnFocusChangeListener { _, hasFocus ->
-            lifecycleScope.launch {
-                delay(keyboardDetectDelay)
-                if (hasFocus && !isOnScreenKeyboardEnabled(view.layout, resources.configuration)) {
-                    openImm()
-                }
+        view.root.viewTreeObserver.addOnGlobalLayoutListener {
+            // View의 focus가 변경됐을 때를 observe.
+            if (isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+                Log.d("LoginActivity", "keyboard enabled")
+                openImm(this)
             }
 
         }
@@ -159,6 +164,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                         loaded = true
                         val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
                         startActivity(mainIntent)
+                        finish()
                     } else {
                         throw Exception("token null")
                     }
@@ -191,7 +197,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         return Base64.encodeToString(encrypted, Base64.NO_WRAP)
     }
 
-    private fun generateSessionId() : String {
+    private fun generateSessionId(): String {
         val secureRandom = SecureRandom()
         var rawSessionId = ""
         for (x in 0..30) {

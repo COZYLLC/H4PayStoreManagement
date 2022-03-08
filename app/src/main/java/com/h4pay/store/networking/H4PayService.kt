@@ -2,11 +2,28 @@ package com.h4pay.store.networking
 
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.h4pay.store.BuildConfig
 import com.h4pay.store.model.*
+import com.h4pay.store.networking.tools.networkInterceptor
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
+
+fun initService(): H4PayService {
+    val client = OkHttpClient.Builder()
+        .addNetworkInterceptor(networkInterceptor)
+        .build()
+    val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl("${BuildConfig.API_URL}/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .client(client)
+        .build()
+    return retrofit.create(H4PayService::class.java)
+}
 
 public interface H4PayService {
     // Store Status

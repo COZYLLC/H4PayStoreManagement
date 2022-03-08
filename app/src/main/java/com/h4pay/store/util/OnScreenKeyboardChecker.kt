@@ -13,10 +13,10 @@ import android.view.View
     val r: Rect = Rect()
     view.getWindowVisibleDisplayFrame(r)
 
-    val screenHeight = view.rootView.height
-    val rectHeight = r.height()
-    Log.d("OnScreenKeyboard", "${screenHeight} | ${rectHeight}")
-    return screenHeight - rectHeight > 100
+    val deviceHeight = view.rootView.height
+    val viewHeight = r.height()
+    Log.d("OnScreenKeyboard", "${deviceHeight} | ${viewHeight}, ${deviceHeight-viewHeight} ")
+    return deviceHeight-viewHeight >200
 }
 
 fun isOnScreenKeyboardEnabled(view:View, configuration: Configuration) : Boolean{

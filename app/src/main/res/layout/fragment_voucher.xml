@@ -1,87 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/topBanner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            android:orientation="horizontal"
-            android:padding="20dp"
-            app:layout_constraintBottom_toTopOf="@+id/openWarning"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="200dp"
-                    android:layout_height="50dp"
-                    android:layout_marginRight="20dp"
-
-                    android:src="@drawable/h4pay_textlogo" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-
-                    android:orientation="vertical">
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/openStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:checked="true"
-                        android:gravity="center"
-                        android:thumb="@drawable/shape_switch_thumb"
-                        app:switchMinWidth="50dp"
-                        app:track="@drawable/selector_switch" />
-
-                    <TextView
-                        android:id="@+id/openStatusText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-
-                        android:gravity="center"
-                        android:text="OPEN"
-                        android:textSize="13dp" />
-
-                </LinearLayout>
-
-                <View
-
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
-
-
-                <TextClock
-
-                    android:id="@+id/time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:format24Hour="HH:mm"
-                    android:text="12:40"
-                    android:textColor="@color/black"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-        </LinearLayout>
+        android:background="@color/white">
 
         <ScrollView
 
@@ -89,7 +12,6 @@
             android:layout_height="match_parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
-
                 android:id="@+id/usable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -170,6 +92,7 @@
                                 android:orientation="horizontal">
 
                                 <EditText
+                                    android:nextFocusForward="@id/productBarcode"
                                     android:id="@+id/idInput"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
@@ -389,6 +312,7 @@
                                 android:orientation="horizontal">
 
                                 <EditText
+                                    android:nextFocusForward="@id/idInput"
                                     android:id="@+id/productBarcode"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
@@ -498,43 +422,5 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/openWarning"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/topBanner">
-
-            <ImageView
-                android:id="@+id/logo"
-                android:layout_width="300dp"
-                android:layout_height="300dp"
-                android:src="@drawable/h4pay"
-                app:layout_constraintBottom_toTopOf="@+id/openStoreAlert"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/openStoreAlert"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/openStore"
-                android:textSize="30sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/logo" />
-
-            <ImageView
-                android:layout_width="100dp"
-                android:layout_height="50dp"
-                android:layout_marginEnd="20dp"
-                android:src="@drawable/cozy"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

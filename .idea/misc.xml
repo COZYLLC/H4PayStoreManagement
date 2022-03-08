@@ -31,11 +31,15 @@
         <entry key="app/src/main/res/layout/activity_exchangemain.xml" value="0.4036911147134092" />
         <entry key="app/src/main/res/layout/activity_info.xml" value="0.21510416666666668" />
         <entry key="app/src/main/res/layout/activity_login.xml" value="0.38233068961493294" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.2858151023288638" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_report.xml" value="0.21510416666666668" />
-        <entry key="app/src/main/res/layout/activity_voucher.xml" value="0.33126094332593037" />
+        <entry key="app/src/main/res/layout/activity_voucher.xml" value="0.10804020100502512" />
+        <entry key="app/src/main/res/layout/fragment_closed.xml" value="0.18067226890756302" />
+        <entry key="app/src/main/res/layout/fragment_purchase.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/fragment_voucher.xml" value="0.1" />
         <entry key="app/src/main/res/layout/items_recyclerview.xml" value="0.7454957457867437" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.388" />
+        <entry key="app/src/main/res/xml/menu.xml" value="0.23541666666666666" />
         <entry key="app/src/main/res/xml/selector_switch.xml" value="0.2265625" />
       </map>
     </option>
@@ -46,5 +50,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.11448834853090173" />
+      </ProjectState>
+    </option>
   </component>
 </project>

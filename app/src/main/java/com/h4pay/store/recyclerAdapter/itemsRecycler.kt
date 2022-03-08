@@ -9,13 +9,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.h4pay.store.R
-import com.h4pay.store.VoucherActivity
+import com.h4pay.store.fragments.VoucherFragment
 import com.h4pay.store.prodList
 import org.json.JSONArray
 import org.json.JSONObject
@@ -28,6 +29,13 @@ class itemsRecycler(
     private val context: Context,
     private var items: JsonArray
 ) : RecyclerView.Adapter<itemsRecycler.Holder>() {
+
+    private var onRecyclerDataChanged:() -> Unit = {};
+
+    fun setOnRecyclerDataChanged(listener:() -> Unit) {
+        this.onRecyclerDataChanged = listener
+
+    }
 
     private val TAG = "[DEBUG]"
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -55,16 +63,18 @@ class itemsRecycler(
         holder.bind(position, items[position].asJsonObject, context)
     }
 
+
+
     inner class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val pName = itemView.findViewById<TextView>(R.id.pName)
-        val pImage = itemView.findViewById<ImageView>(R.id.pImage)
-        val amount = itemView.findViewById<TextView>(R.id.rec_amount)
-        val delButton = itemView.findViewById<FloatingActionButton>(R.id.delButton)
-        val addButton = itemView.findViewById<FloatingActionButton>(R.id.addButton)
-        val delProductButton = itemView.findViewById<FloatingActionButton>(R.id.delProductButton)
+        private val pName = itemView.findViewById<TextView>(R.id.pName)
+        private val pImage = itemView.findViewById<ImageView>(R.id.pImage)
+        private val amount = itemView.findViewById<TextView>(R.id.rec_amount)
+        private val delButton = itemView.findViewById<FloatingActionButton>(R.id.delButton)
+        private val addButton = itemView.findViewById<FloatingActionButton>(R.id.addButton)
+        private val delProductButton = itemView.findViewById<FloatingActionButton>(R.id.delProductButton)
 
         @SuppressLint("SetTextI18n")
-        fun bind(position: Int, item: JsonObject, context: Context) {
+        fun bind(position: Int, item: JsonObject, buildContext: Context) {
             Log.d("TAG", item.toString())
             if (!isMutable) {
                 delButton.visibility = View.GONE
@@ -82,13 +92,12 @@ class itemsRecycler(
                             item.addProperty("qty", currentQty - 1)
                             items.add(item)
                             notifyItemChanged(position)
-                            (itemView.context as VoucherActivity)
-                                .onRecyclerDataChanged()
+
+                                onRecyclerDataChanged()
                         } else if (item["qty"].asInt == 1) {
                             items.remove(position)
                             notifyItemRemoved(position);
-                            (itemView.context as VoucherActivity)
-                                .onRecyclerDataChanged()
+                            onRecyclerDataChanged()
                         }
                         return@setOnClickListener
                     }
@@ -107,8 +116,7 @@ class itemsRecycler(
                         item.addProperty("qty", currentQty + 1)
                         items.add(item)
                         notifyItemChanged(position)
-                        (itemView.context as VoucherActivity)
-                            .onRecyclerDataChanged()
+                        onRecyclerDataChanged()
                     }
                 }
             }
@@ -117,8 +125,7 @@ class itemsRecycler(
                     if (items[i].asJsonObject["id"].asInt == item["id"].asInt) {
                         items.remove(position);
                         notifyItemRemoved(position);
-                        (itemView.context as VoucherActivity)
-                            .onRecyclerDataChanged()
+                       onRecyclerDataChanged()
                     }
                 }
             }
