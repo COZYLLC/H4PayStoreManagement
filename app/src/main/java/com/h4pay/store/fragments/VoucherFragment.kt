@@ -120,7 +120,7 @@ class VoucherFragment : Fragment() {
             if (isAdded)
                 if (isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
                     Log.d("VoucherFragment", "keyboard enabled")
-                    openImm(requireActivity())
+                    openImm(requireActivity(), false)
                 }
 
         }

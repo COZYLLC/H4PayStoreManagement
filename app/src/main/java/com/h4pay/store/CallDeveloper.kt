@@ -4,15 +4,26 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.h4pay.store.networking.tools.uploadSupport
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.JsonObject
+import com.h4pay.store.networking.H4PayService
+import com.h4pay.store.networking.initService
+import kotlinx.coroutines.launch
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.Multipart
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 class CallDeveloper : AppCompatActivity() {
     private lateinit var titleInput: EditText;
@@ -20,9 +31,10 @@ class CallDeveloper : AppCompatActivity() {
     private lateinit var uploadedTextView: TextView;
     private lateinit var uploadButton: LinearLayout;
     private lateinit var submitButton: LinearLayout;
+    private lateinit var h4payService: H4PayService
     var file: File? = null;
 
-    fun UiInit() {
+    private fun uiInit() {
         titleInput = findViewById(R.id.titleInput)
         contentInput = findViewById(R.id.contentInput)
         uploadedTextView = findViewById(R.id.uploadedFile)
@@ -37,22 +49,42 @@ class CallDeveloper : AppCompatActivity() {
         }
 
         submitButton.setOnClickListener {
-            val submitRes = uploadSupport(
-                titleInput.text.toString(),
-                contentInput.text.toString(),
-                file
-            ).execute().get()
-            if (submitRes != null && submitRes.getBoolean("status")) {
-                Toast.makeText(this, "제출이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                makeEmpty()
+            val title = titleInput.text.toString()
+            val content = contentInput.text.toString()
+            val bodyMap:LinkedHashMap<String, RequestBody> = LinkedHashMap()
+            val fileBody = RequestBody.create("multipart/form-data".toMediaTypeOrNull(), file!!)
+            bodyMap["img\"; filename=\"${file!!.name}"] = fileBody
+            bodyMap["uid"] =  RequestBody.create("text/plain".toMediaTypeOrNull(), "storeExchanger")
+            bodyMap["email"] =  RequestBody.create("text/plain".toMediaTypeOrNull(), "storeExchanger")
+            bodyMap["title"] =  RequestBody.create("text/plain".toMediaTypeOrNull(), title)
+            bodyMap["content"] =  RequestBody.create("text/plain".toMediaTypeOrNull(), content)
+            bodyMap["category"] = RequestBody.create("text/plain".toMediaTypeOrNull(), "exchanger")
+            lifecycleScope.launch {
+                kotlin.runCatching {
+                    h4payService.submitSupport(bodyMap)
+                }.onSuccess {
+                    if (it.isSuccessful) {
+                        Toast.makeText(this@CallDeveloper, "제출이 완료되었습니다.", Toast.LENGTH_SHORT)
+                            .show()
+                        makeEmpty()
+                    }
+                }.onFailure {
+                    Log.e("Error", it.message!!)
+                    Toast.makeText(
+                        this@CallDeveloper,
+                        "제출에 실패했습니다. support@cozyllc.co.kr 등 개발사 연락처로 문의 부탁드립니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
+
         }
     }
 
-    fun makeEmpty() {
+    private fun makeEmpty() {
         titleInput.setText("")
         contentInput.setText("")
-        uploadedTextView.setText("")
+        uploadedTextView.text = ""
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -79,7 +111,8 @@ class CallDeveloper : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_report)
-        UiInit()
+        h4payService = initService()
+        uiInit()
 
     }
 }

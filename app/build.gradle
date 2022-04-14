@@ -19,8 +19,8 @@ android {
         applicationId "com.h4pay.store"
         minSdkVersion 27
         targetSdkVersion 31
-        versionCode 27
-        versionName "1.413"
+        versionCode 28
+        versionName "1.414"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {

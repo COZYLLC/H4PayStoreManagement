@@ -188,7 +188,7 @@ class PurchaseFragment : Fragment() {
                         )
                     ) {
                         Log.d("PurchaseFragment", "keyboard enabled")
-                        openImm(requireActivity())
+                        openImm(requireActivity(), false)
                     }
 
                 }
@@ -278,7 +278,7 @@ class PurchaseFragment : Fragment() {
     }
 
     private fun fetchProduct() {
-        lifecycleScope.launch {
+        lifecycleScope.launchWhenCreated {
             kotlin.runCatching {
                 h4payService.getProducts()
             }.onSuccess {
@@ -286,7 +286,7 @@ class PurchaseFragment : Fragment() {
             }.onFailure {
                 Log.e(TAG, it.message!!)
                 showServerError(requireActivity())
-                return@launch
+                return@launchWhenCreated
             }
         }
     }
@@ -337,7 +337,7 @@ class PurchaseFragment : Fragment() {
             view.orderIdInput.requestFocus()
         } //RecyclerView focus release
 
-        lifecycleScope.launch {
+        lifecycleScope.launchWhenCreated {
             Thread.sleep(1000)
             view.orderIdInput.requestFocus()
         } //view.orderIdInputText focus in

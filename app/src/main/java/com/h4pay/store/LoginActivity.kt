@@ -81,15 +81,29 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     }
 
     private fun update() {
-        val versionToUpdate = updateChecker(this)
-        if (versionToUpdate != null) {
-            customDialogs.yesOnlyDialog(
-                this,
-                "${versionToUpdate.versionName} 업데이트가 있어요!\n변경점: ${versionToUpdate.changes}",
-                { downloadApp(this, versionToUpdate.versionName, versionToUpdate.url) },
-                "업데이트",
-                R.drawable.ic_baseline_settings_24
-            )
+        val currentVersionName = getVersionInfo(this)
+
+        lifecycleScope.launch {
+            kotlin.runCatching {
+                h4payService.getVersionInfo()
+            }.onSuccess {
+                // Recent version found. Start download.
+                if (currentVersionName.toDouble() < it.versionName.toDouble()) {
+                    customDialogs.yesOnlyDialog(
+                        this@LoginActivity,
+                        "${it.versionName} 업데이트가 있어요!\n변경점: ${it.changes}",
+                        {
+                            downloadApp(this@LoginActivity, it.versionName.toDouble(), it.url)
+                        },
+                        "업데이트",
+                        R.drawable.ic_baseline_settings_24
+                    )
+                }
+            }.onFailure {
+                Log.e("UpdateChecker", it.message!!)
+                Toast.makeText(this@LoginActivity, "업데이트 검사에 실패했습니다. 앱을 종료합니다.", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
 
@@ -97,24 +111,13 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         super.onConfigurationChanged(newConfig)
         view.root.viewTreeObserver.addOnGlobalLayoutListener {
             // View의 focus가 변경됐을 때를 observe.
-            if (isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+            if (!isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
                 Log.d("LoginActivity", "keyboard enabled")
-                openImm(this)
+                openImm(this, true)
             }
 
         }
     }
-
-    private fun openImm() {
-        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
-            .showInputMethodPicker()
-        Toast.makeText(
-            this,
-            "바코드 스캐너 혹은 키보드가 장착되어 있는 것 같습니다. 잠시 분리하거나 \"스크린 키보드\" 옵션을 켜주세요.",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,9 +138,9 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
         view.root.viewTreeObserver.addOnGlobalLayoutListener {
             // View의 focus가 변경됐을 때를 observe.
-            if (isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
+            if (!isOnScreenKeyboardEnabled(view.root, resources.configuration)) {
                 Log.d("LoginActivity", "keyboard enabled")
-                openImm(this)
+                openImm(this, true)
             }
 
         }

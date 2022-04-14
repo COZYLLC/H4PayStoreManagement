@@ -20,14 +20,15 @@ import com.h4pay.store.fragments.VoucherFragment
 lateinit var currentFragmentType: FragmentType
 
 
-fun openImm(context: Activity) {
+fun openImm(context: Activity, guide: Boolean) { // guide 값에 따라 가상 키보드를 켤지 끌지를 알려줌. (true -> 켜라)
     val inputMethodManager: InputMethodManager? =
         ContextCompat.getSystemService(context, InputMethodManager::class.java)
     if (inputMethodManager != null) {
         inputMethodManager.showInputMethodPicker()
+        val message = if (guide) "\"스크린 키보드\" 옵션이 켜져있어 가상 키보드가 올라옵니다. 해당 옵션을 꺼주세요." else "\"스크린 키보드\" 옵션이 꺼져있어 가상 키보드가 올라오지 않습니다. 해당 옵션을 켜주세요."
         Toast.makeText(
             context,
-            "\"스크린 키보드\" 옵션이 켜져있어 가상 키보드가 올라옵니다. 해당 옵션을 꺼주세요.",
+            message,
             Toast.LENGTH_LONG
         ).show()
     }

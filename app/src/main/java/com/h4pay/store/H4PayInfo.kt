@@ -11,6 +11,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.h4pay.store.model.signOut
+import com.h4pay.store.networking.H4PayService
+import com.h4pay.store.networking.initService
 import kotlinx.coroutines.launch
 import org.apache.poi.sl.usermodel.Line
 import kotlin.math.sign
@@ -22,8 +24,9 @@ class H4PayInfo : AppCompatActivity(){
     private lateinit var latestVerTextView: TextView
     private lateinit var updateButton:LinearLayout
     private lateinit var signout: LinearLayout
+    private lateinit var h4payService:H4PayService
 
-    fun UiInit() {
+    private fun uiInit() {
         logoImageView = findViewById(R.id.LogoImageView)
         currentVerTextView = findViewById(R.id.currVersion)
         latestVerTextView = findViewById(R.id.latestVersion)
@@ -36,19 +39,20 @@ class H4PayInfo : AppCompatActivity(){
                Toast.makeText(this@H4PayInfo, "로그아웃이 완료되었습니다. 앱을 재실행합니다.", Toast.LENGTH_SHORT).show()
                val intent = Intent(this@H4PayInfo, LoginActivity::class.java)
                startActivity(intent)
-               finishActivity(0)
+               finish()
            }
+        }
+        updateButton.setOnClickListener {
+            update()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.setContentView(R.layout.activity_info)
-        UiInit()
-        val recentVersion = getRecentVersion(this)
-        if (recentVersion != null) {
-            latestVerTextView.text = recentVersion.versionName.toString()
-        }
+        h4payService = initService()
+        uiInit()
+
     }
 
     override fun onRequestPermissionsResult(
@@ -58,7 +62,7 @@ class H4PayInfo : AppCompatActivity(){
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d("DEBUG", "Permission: " + permissions[0] + "was " + grantResults[0])
             update()
 
@@ -68,18 +72,33 @@ class H4PayInfo : AppCompatActivity(){
         }
     }
 
-    fun update() {
-        val versionToUpdate = updateChecker(this)
-        if (versionToUpdate != null) {
-            customDialogs.yesOnlyDialog(
-                this,
-                "${versionToUpdate.versionName} 업데이트가 있어요!\n변경점: ${versionToUpdate.changes}",
-                { downloadApp(this, versionToUpdate.versionName, versionToUpdate.url) },
-                "업데이트",
-                R.drawable.ic_baseline_settings_24
-            )
-        } else {
-            Toast.makeText(this, "최신버전을 사용하고 있습니다.", Toast.LENGTH_SHORT).show()
+    private fun update() {
+        val currentVersionName = getVersionInfo(this)
+
+        lifecycleScope.launch {
+            kotlin.runCatching {
+                h4payService.getVersionInfo()
+            }.onSuccess {
+                // Recent version found. Start download.
+                latestVerTextView.text = it.versionName
+                if (currentVersionName.toDouble() < it.versionName.toDouble()) {
+                    customDialogs.yesOnlyDialog(
+                        this@H4PayInfo,
+                        "${it.versionName} 업데이트가 있어요!\n변경점: ${it.changes}",
+                        {
+                            downloadApp(this@H4PayInfo, it.versionName.toDouble(), it.url)
+                        },
+                        "업데이트",
+                        R.drawable.ic_baseline_settings_24
+                    )
+                } else {
+                    Toast.makeText(this@H4PayInfo, "최신버전을 사용하고 있습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }.onFailure {
+                Log.e("UpdateChecker", it.message!!)
+                Toast.makeText(this@H4PayInfo, "업데이트 검사에 실패했습니다. 앱을 종료합니다.", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
 

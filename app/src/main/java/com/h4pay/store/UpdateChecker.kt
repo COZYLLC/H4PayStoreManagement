@@ -1,7 +1,6 @@
 package com.h4pay.store
 
 import android.Manifest
-import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
@@ -11,14 +10,10 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
-import com.google.gson.annotations.SerializedName
 import com.h4pay.store.model.Version
-import com.h4pay.store.networking.Get
-import com.h4pay.store.networking.H4PayService
-import kotlinx.coroutines.launch
-import org.json.JSONObject
+import com.h4pay.store.networking.initService
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -30,46 +25,14 @@ const val permissionALL = 1
 val permissionList =
     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-fun getRecentVersion(context: Context): Version? {
-    var jsonObject: JSONObject? = Get("${BuildConfig.API_URL}/versions").execute().get()
-    if (jsonObject == null) {
-        AlertDialog.Builder(context)
-            .setTitle("서버 오류")
-            .setMessage("서버 오류로 인해 엡데이트 확인이 불가능합니다. 개발자에게 문의해주세요.")
-        return null
-    } else {
-        val result = jsonObject.getJSONObject("result")
-        val version = result.getDouble("version")
-        val changes = result.getString("changes")
-        val url = result.getString("url")
-        return Version(versionName = version, changes = changes, url = url)
-    }
-}
-
-fun updateChecker(context: Context): Version? {
-    try {
-        val versionName = getVersionInfo(context)
-        val recentVersion: Version = getRecentVersion(context)!!;
-        if (versionName.toDouble() < recentVersion.versionName) {
-            return recentVersion
-        } else {
-            return null;
-        }
-    } catch (e: Exception) {
-        Toast.makeText(context, "업데이트 검사에 실패했습니다. 앱을 종료합니다.", Toast.LENGTH_SHORT).show()
-        return null;
-    }
-
-}
 
 fun getVersionInfo(context: Context): String {
     val i = context.packageManager.getPackageInfo(context.packageName, 0)
     return i.versionName
 }
 
-
 fun downloadApp(context: Context, version: Double, url: String) {
-    var mDownloadManager: DownloadManager =
+    val mDownloadManager: DownloadManager =
         context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     val versionStr = version.toString().split("\\.".toRegex())
     Log.e(

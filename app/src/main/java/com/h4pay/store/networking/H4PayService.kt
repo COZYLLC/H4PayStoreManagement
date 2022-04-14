@@ -5,7 +5,9 @@ import com.google.gson.annotations.SerializedName
 import com.h4pay.store.BuildConfig
 import com.h4pay.store.model.*
 import com.h4pay.store.networking.tools.networkInterceptor
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Response
@@ -28,17 +30,17 @@ fun initService(): H4PayService {
 public interface H4PayService {
     // Store Status
     @GET("stores")
-    suspend fun getStoreStatus():Boolean
+    suspend fun getStoreStatus(): Boolean
 
     @POST("stores/change")
-    suspend fun changeStoreStatus(@Body body:JsonObject) : Boolean
+    suspend fun changeStoreStatus(@Body body: JsonObject): Boolean
 
     // School
     @GET("schools")
     suspend fun getSchools(): List<School>
 
     @POST("schools/login")
-    suspend fun schoolLogin(@Body body:JsonObject):Response<String>
+    suspend fun schoolLogin(@Body body: JsonObject): Response<String>
 
     // Product
     @GET("products")
@@ -46,28 +48,35 @@ public interface H4PayService {
 
     // Order
     @GET("orders/filter")
-    suspend fun getOrderDetail(@Query("orderId") orderId:String) : List<Order>
+    suspend fun getOrderDetail(@Query("orderId") orderId: String): List<Order>
 
     @POST("orders/exchange")
-    suspend fun exchangeOrder(@Body body:JsonObject)
+    suspend fun exchangeOrder(@Body body: JsonObject)
 
     // Gift
     @GET("gifts/filter")
     suspend fun getGiftDetail(@Query("orderId") orderId: String): List<Gift>
 
     @POST("gifts/exchange")
-    suspend fun exchangeGift(@Body body:JsonObject)
+    suspend fun exchangeGift(@Body body: JsonObject)
 
     //Voucher
     @GET("vouchers/filter")
-    suspend fun getVoucherDetail(@Query("id") voucherId:String): List<Voucher>
+    suspend fun getVoucherDetail(@Query("id") voucherId: String): List<Voucher>
 
     @POST("vouchers/exchange")
-    suspend fun exchangeVoucher(@Body body:JsonObject)
+    suspend fun exchangeVoucher(@Body body: JsonObject)
+
+    @POST("uploads")
+    @Multipart
+    suspend fun submitSupport(@PartMap() partMap: LinkedHashMap<String, RequestBody>): Response<String>
+
+    @GET("versions")
+    suspend fun getVersionInfo(): Version
 }
 
 data class ResponseWrapper<T>(
-    var code:Int,
+    var code: Int,
     @SerializedName("status") var status: Boolean,
     @SerializedName("result") var result: T? = null,
     @SerializedName("message") var message: String? = null

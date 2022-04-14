@@ -65,6 +65,7 @@ lateinit var prodList: List<Product>
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "store")
 
 fun showServerError(context: Activity) {
+    Log.e("Error", "Error occured in ${context.localClassName}")
     AlertDialog.Builder(context, R.style.AlertDialogTheme)
         .setTitle("서버 오류")
         .setMessage("서버 오류로 인해 사용할 수 없습니다. 개발자에게 문의 바랍니다.")
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity() {
                     Log.e(TAG, it.toString())
                     setStoreStatus(it)
                 }.onFailure {
+                    Log.d("Error", it.message!!)
                     showServerError(this@MainActivity)
                 }
             }
@@ -135,8 +137,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Toast.makeText(this, token, Toast.LENGTH_SHORT).show()
-
+        //Toast.makeText(this, token, Toast.LENGTH_SHORT).show()
         currentFragmentType = FragmentType.Purchase
         view = DataBindingUtil.setContentView(this, R.layout.activity_main)
         ISODateFormat.timeZone = TimeZone.getTimeZone("UTC")
