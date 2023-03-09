@@ -103,10 +103,10 @@ class VoucherFragment : Fragment() {
             swapFragment(requireActivity(), FragmentType.Purchase, Bundle())
         }
         view.cameraScan.setOnClickListener {
-            initScan(requireActivity())
+            initScan(this)
         }
         view.cameraScanCircle.setOnClickListener {
-            initScan(requireActivity())
+            initScan(this)
         }
         view.clearId.setOnClickListener {
             view.idInput.setText("")
@@ -247,6 +247,8 @@ class VoucherFragment : Fragment() {
             post {
                 view.productBarcode.isFocusableInTouchMode = true;
                 view.productBarcode.requestFocus()
+
+
             }
         }
     }

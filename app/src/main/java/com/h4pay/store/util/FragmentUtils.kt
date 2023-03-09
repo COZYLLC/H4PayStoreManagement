@@ -25,7 +25,8 @@ fun openImm(context: Activity, guide: Boolean) { // guide 값에 따라 가상 �
         ContextCompat.getSystemService(context, InputMethodManager::class.java)
     if (inputMethodManager != null) {
         inputMethodManager.showInputMethodPicker()
-        val message = if (guide) "\"스크린 키보드\" 옵션이 켜져있어 가상 키보드가 올라옵니다. 해당 옵션을 꺼주세요." else "\"스크린 키보드\" 옵션이 꺼져있어 가상 키보드가 올라오지 않습니다. 해당 옵션을 켜주세요."
+        val message =
+            if (guide) "\"스크린 키보드\" 옵션이 켜져있어 가상 키보드가 올라옵니다. 해당 옵션을 꺼주세요." else "\"스크린 키보드\" 옵션이 꺼져있어 가상 키보드가 올라오지 않습니다. 해당 옵션을 켜주세요."
         Toast.makeText(
             context,
             message,
@@ -35,9 +36,12 @@ fun openImm(context: Activity, guide: Boolean) { // guide 값에 따라 가상 �
 
 }
 
-fun initScan(context: Activity) {
-    val intentIntegrator = IntentIntegrator(context)
-    intentIntegrator.initiateScan()
+fun initScan(context: Fragment) {
+    val integrator = IntentIntegrator.forSupportFragment(context)
+    integrator.setBeepEnabled(false)
+    integrator.setOrientationLocked(true)
+    integrator.setPrompt("바코드를 스캔해주세요.")
+    integrator.initiateScan()
 }
 
 

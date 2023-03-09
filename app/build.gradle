@@ -11,7 +11,7 @@ android {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
     compileSdkVersion 31
     buildToolsVersion "30.0.2"
-    dataBinding{
+    dataBinding {
         enabled = true
     }
 
@@ -19,8 +19,8 @@ android {
         applicationId "com.h4pay.store"
         minSdkVersion 27
         targetSdkVersion 31
-        versionCode 28
-        versionName "1.414"
+        versionCode 29
+        versionName "1.415"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
@@ -49,6 +49,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        freeCompilerArgs = ["-Xallow-result-return-type"]
     }
 }
 

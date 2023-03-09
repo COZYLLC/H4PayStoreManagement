@@ -33,12 +33,16 @@ import com.h4pay.store.networking.initService
 import com.h4pay.store.networking.tools.networkInterceptor
 import com.h4pay.store.recyclerAdapter.itemsRecycler
 import com.h4pay.store.util.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.NumberFormat
+
+inline fun <reified T : Throwable> Result<*>.except(): Result<*> =
+    onFailure { if (it is T) throw it }
 
 class PurchaseFragment : Fragment() {
 
@@ -52,12 +56,12 @@ class PurchaseFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         Log.e("PurchaseFragment", "created")
-        h4payService = initService()
-        fetchProduct()
+
         view = DataBindingUtil.inflate(inflater, R.layout.fragment_purchase, container, false)
 
         return view.root
     }
+
 
     private fun setExchangeButtonListener(orderId: String) {
         //------Cancel and Exchange Button OnClick Event----------
@@ -134,8 +138,10 @@ class PurchaseFragment : Fragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onStart() {
+        super.onStart()
+        h4payService = initService()
+        fetchProduct()
         initUi()
         if (arguments != null) {
             val passedId: String? = requireArguments()["orderId"] as String?
@@ -144,16 +150,15 @@ class PurchaseFragment : Fragment() {
         }
     }
 
-
     private fun initUi() {
         view.cameraScan.setOnClickListener {
-            initScan(requireActivity())
+            initScan(this)
         }
         view.clearId.setOnClickListener {
             view.orderIdInput.setText("")
         }
         view.cameraScanCircle.setOnClickListener {
-            initScan(requireActivity())
+            initScan(this)
         }
         view.callDeveloper.setOnClickListener {
             val intent = Intent(this.requireContext(), CallDeveloper::class.java)
@@ -201,6 +206,8 @@ class PurchaseFragment : Fragment() {
             override fun afterTextChanged(editable: Editable) {
                 // 입력이 끝났을 때
                 val inputtedOrderId = editable.toString()
+                Log.i("OrderId", inputtedOrderId)
+
                 view.orderIdInput.requestFocus();
                 if (inputtedOrderId.length < 0 || inputtedOrderId.length > 25) {
                     Toast.makeText(requireActivity(), "올바른 주문번호가 아닙니다!", Toast.LENGTH_SHORT)
@@ -236,6 +243,7 @@ class PurchaseFragment : Fragment() {
                             //API CALL
                         }
                         isGift(inputtedOrderId) == true -> { // gift
+                            Log.i("OrderId", inputtedOrderId)
                             lifecycleScope.launch {
                                 kotlin.runCatching {
                                     h4payService.getGiftDetail(inputtedOrderId)
@@ -277,17 +285,19 @@ class PurchaseFragment : Fragment() {
         view.exchangeButton.isEnabled = !exchanged
     }
 
+
+
     private fun fetchProduct() {
         lifecycleScope.launchWhenCreated {
             kotlin.runCatching {
                 h4payService.getProducts()
             }.onSuccess {
                 prodList = it
-            }.onFailure {
-                Log.e(TAG, it.message!!)
-                showServerError(requireActivity())
-                return@launchWhenCreated
-            }
+            }.except<CancellationException>()
+                .onFailure {
+                    Log.e(TAG, it.message!!)
+                    showServerError(requireActivity())
+                }
         }
     }
 
@@ -337,7 +347,7 @@ class PurchaseFragment : Fragment() {
             view.orderIdInput.requestFocus()
         } //RecyclerView focus release
 
-        lifecycleScope.launchWhenCreated {
+        lifecycleScope.launch {
             Thread.sleep(1000)
             view.orderIdInput.requestFocus()
         } //view.orderIdInputText focus in
@@ -375,6 +385,7 @@ class PurchaseFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null && result.contents != null) {
+            Log.i("OrderId", result.contents)
             view.orderIdInput.setText(result.contents)
         } else {
             super.onActivityResult(requestCode, resultCode, data)

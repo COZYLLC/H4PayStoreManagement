@@ -43,7 +43,6 @@
                         android:checked="true"
                         android:gravity="center"
                         android:thumb="@drawable/shape_switch_thumb"
-                        app:switchMinWidth="50dp"
                         app:track="@drawable/selector_switch" />
 
                     <TextView
