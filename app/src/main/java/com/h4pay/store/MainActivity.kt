@@ -62,7 +62,7 @@ import java.util.*
 lateinit var prodList: List<Product>
 
 // At the top level of your kotlin file:
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "store")
+//val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "store")
 
 fun showServerError(context: Activity) {
     Log.e("Error", "Error occured in ${context.localClassName}")

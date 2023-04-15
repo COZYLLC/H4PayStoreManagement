@@ -11,11 +11,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.h4pay.store.model.signOut
-import com.h4pay.store.networking.H4PayService
-import com.h4pay.store.networking.initService
+import com.h4pay.store.networking.RetrofitInstance
 import kotlinx.coroutines.launch
-import org.apache.poi.sl.usermodel.Line
-import kotlin.math.sign
 
 class H4PayInfo : AppCompatActivity(){
 
@@ -24,7 +21,6 @@ class H4PayInfo : AppCompatActivity(){
     private lateinit var latestVerTextView: TextView
     private lateinit var updateButton:LinearLayout
     private lateinit var signout: LinearLayout
-    private lateinit var h4payService:H4PayService
 
     private fun uiInit() {
         logoImageView = findViewById(R.id.LogoImageView)
@@ -50,7 +46,6 @@ class H4PayInfo : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.setContentView(R.layout.activity_info)
-        h4payService = initService()
         uiInit()
 
     }
@@ -77,7 +72,7 @@ class H4PayInfo : AppCompatActivity(){
 
         lifecycleScope.launch {
             kotlin.runCatching {
-                h4payService.getVersionInfo()
+                RetrofitInstance.service.getVersionInfo()
             }.onSuccess {
                 // Recent version found. Start download.
                 latestVerTextView.text = it.versionName

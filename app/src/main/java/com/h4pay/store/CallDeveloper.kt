@@ -8,9 +8,7 @@ import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.JsonObject
-import com.h4pay.store.networking.H4PayService
-import com.h4pay.store.networking.initService
+import com.h4pay.store.networking.RetrofitInstance
 import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -31,7 +29,6 @@ class CallDeveloper : AppCompatActivity() {
     private lateinit var uploadedTextView: TextView;
     private lateinit var uploadButton: LinearLayout;
     private lateinit var submitButton: LinearLayout;
-    private lateinit var h4payService: H4PayService
     var file: File? = null;
 
     private fun uiInit() {
@@ -61,7 +58,7 @@ class CallDeveloper : AppCompatActivity() {
             bodyMap["category"] = RequestBody.create("text/plain".toMediaTypeOrNull(), "exchanger")
             lifecycleScope.launch {
                 kotlin.runCatching {
-                    h4payService.submitSupport(bodyMap)
+                    RetrofitInstance.service.submitSupport(bodyMap)
                 }.onSuccess {
                     if (it.isSuccessful) {
                         Toast.makeText(this@CallDeveloper, "제출이 완료되었습니다.", Toast.LENGTH_SHORT)
@@ -111,7 +108,6 @@ class CallDeveloper : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_report)
-        h4payService = initService()
         uiInit()
 
     }

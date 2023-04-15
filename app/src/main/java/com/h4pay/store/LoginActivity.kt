@@ -4,47 +4,36 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Process
-import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
-import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.JsonObject
 import com.h4pay.store.databinding.ActivityLoginBinding
 import com.h4pay.store.model.School
-import com.h4pay.store.model.tokenFromStorageFlow
-import com.h4pay.store.networking.H4PayService
-import com.h4pay.store.networking.tools.networkInterceptor
+import com.h4pay.store.model.Version
 import com.h4pay.store.networking.tools.permissionManager
+import com.h4pay.store.repository.PrefsRepository
 import com.h4pay.store.util.isOnScreenKeyboardEnabled
 import com.h4pay.store.util.openImm
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.security.SecureRandom
+import retrofit2.Response
 
-var token: String? = null
 const val keyboardDetectDelay: Long = 1000
 
 class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     private lateinit var view: ActivityLoginBinding
-    private lateinit var h4payService: H4PayService
     private lateinit var schools: List<School>
     private var selectedSchool: School? = null
     private var loaded = false
@@ -72,7 +61,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
         if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d("DEBUG", "Permission: " + permissions[0] + "was " + grantResults[0])
-            update()
+            viewModel.fetchVersionInfo()
 
         } else {
             Log.d("DEBUG", "Permission denied");
@@ -80,32 +69,6 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         }
     }
 
-    private fun update() {
-        val currentVersionName = getVersionInfo(this)
-
-        lifecycleScope.launch {
-            kotlin.runCatching {
-                h4payService.getVersionInfo()
-            }.onSuccess {
-                // Recent version found. Start download.
-                if (currentVersionName.toDouble() < it.versionName.toDouble()) {
-                    customDialogs.yesOnlyDialog(
-                        this@LoginActivity,
-                        "${it.versionName} 업데이트가 있어요!\n변경점: ${it.changes}",
-                        {
-                            downloadApp(this@LoginActivity, it.versionName.toDouble(), it.url)
-                        },
-                        "업데이트",
-                        R.drawable.ic_baseline_settings_24
-                    )
-                }
-            }.onFailure {
-                Log.e("UpdateChecker", it.message!!)
-                Toast.makeText(this@LoginActivity, "업데이트 검사에 실패했습니다. 앱을 종료합니다.", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-    }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -116,6 +79,98 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 openImm(this, true)
             }
 
+        }
+    }
+
+
+    private val prefsRepository: PrefsRepository by lazy {
+        PrefsRepository(this)
+    }
+    private val viewModel: LoginViewModel by lazy {
+        ViewModelProvider(
+            viewModelStore,
+            LoginViewModelFactory(prefsRepository)
+        )[LoginViewModel::class.java]
+    }
+
+    private val versionCollector = FlowCollector<State<Version>> { state ->
+        // Error Handling
+        if (state is State.Error || (state is State.Success && state.data == null)) {
+            customDialogs.yesOnlyDialog(
+                this,
+                "버전 확인에 실패했어요. 운영사에 문의해주세요.",
+                {},
+                "오류",
+                null
+            )
+            return@FlowCollector
+        }
+        if (state is State.Success) {
+            val version = state.data!!
+            // Recent version found. Start download.
+            val currentVersionName = getVersionInfo(this)
+            if (currentVersionName.toDouble() < version.versionName.toDouble()) {
+                customDialogs.yesOnlyDialog(
+                    this,
+                    "${version.versionName} 업데이트가 있어요!\n변경점: ${version.changes}",
+                    {
+                        downloadApp(this, version.versionName.toDouble(), version.url)
+                    },
+                    "업데이트",
+                    R.drawable.ic_baseline_settings_24
+                )
+            }
+        }
+    }
+
+    private val loginResultCollector = FlowCollector<State<Response<String>>> { state ->
+        if (state is State.Error || state is State.Success && (state.data == null))
+            customDialogs.yesOnlyDialog(this, "로그인에 실패했어요. 학교와 비밀번호를 확인해주세요.", {}, "오류", null)
+        if (state is State.Success) {
+            val res = state.data!!
+            when {
+                res.code() == 200 -> {
+                    val token = res.headers()["x-access-token"]!!
+                    // Todo: Save Token to Store
+                    prefsRepository.setSchoolToken(token)
+                    val mainIntent =
+                        Intent(this, MainActivity::class.java)
+                    startActivity(mainIntent)
+                }
+                res.code() == 400 -> {
+                    Toast.makeText(
+                        this,
+                        "학교 또는 비밀번호가 올바르지 않습니다. 다시 시도해주세요.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                else -> {
+                    showServerError(this)
+                }
+            }
+        }
+    }
+
+    private val schoolCollector = FlowCollector<State<List<School>>> { state ->
+        if (state is State.Error || (state is State.Success && state.data == null)) {
+            // Todo: Handle Error
+            return@FlowCollector
+
+        }
+        if (state is State.Success) {
+            val list = state.data!!
+            val schoolNames: MutableList<String> = listOf<String>().toMutableList()
+            list.forEach { school ->
+                schoolNames.add(school.name)
+            }
+            schools = list
+            val spinnerAdapter: ArrayAdapter<String> = ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_item,
+                schoolNames
+            )
+            view.schoolSpinner.adapter = spinnerAdapter
+            view.schoolSpinner.onItemSelectedListener = this@LoginActivity
         }
     }
 
@@ -142,9 +197,19 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 Log.d("LoginActivity", "keyboard enabled")
                 openImm(this, true)
             }
-
         }
-        initService()
+
+        lifecycleScope.launch {
+            viewModel.versionState.collect(versionCollector)
+        }
+        lifecycleScope.launch {
+            viewModel.loginState.collect(loginResultCollector)
+        }
+        lifecycleScope.launch {
+            viewModel.schoolsState.collect(schoolCollector)
+        }
+        checkAuthValid()
+
         if (!checkConnectivity()) {
             customDialogs.yesOnlyDialog(
                 this, "인터넷에 연결되어있지 않습니다. 확인 후 다시 이용 바랍니다.",
@@ -155,150 +220,30 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             if (!permissionManager.hasPermissions(this, permissionList)) {
                 ActivityCompat.requestPermissions(this, permissionList, permissionALL)
             } else {
-                update()
+                viewModel.fetchVersionInfo()
             }
         }
-
-        lifecycleScope.launchWhenStarted {
-            kotlin.runCatching {
-                tokenFromStorageFlow(this@LoginActivity).collect {
-                    if (it != null && it != "") {
-                        token = it
-                        loaded = true
-                        val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                        startActivity(mainIntent)
-                        finish()
-                    } else {
-                        throw Exception("token null")
-                    }
-                }
-            }.onFailure {
-                if (it.message == "token null") {
-                    Toast.makeText(
-                        this@LoginActivity,
-                        "학교 로그인 정보를 불러올 수 없습니다. 로그인을 재시도해주세요.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                Log.e(TAG, it.message.toString())
-                loaded = true
-                getSchools()
-                view.submit.setOnClickListener {
-                    login(selectedSchool?.id!!, view.password.text.toString())
-                }
-            }
-
-        }
-
     }
 
-
-    private fun encryptToSha256Md5(rawString: String): String {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(rawString.toByteArray(StandardCharsets.UTF_8))
-        val encrypted = messageDigest.digest()
-        return Base64.encodeToString(encrypted, Base64.NO_WRAP)
-    }
-
-    private fun generateSessionId(): String {
-        val secureRandom = SecureRandom()
-        var rawSessionId = ""
-        for (x in 0..30) {
-            rawSessionId += secureRandom.nextInt().toChar()
-        }
-        Log.d(TAG, rawSessionId)
-        return rawSessionId
-    }
-
-    private fun login(schoolId: String?, passwordRawString: String?) {
-        if (schoolId == null || passwordRawString == null) {
-            return
-        }
-        val encryptedPassword = encryptToSha256Md5(passwordRawString)
-        var sessionId = generateSessionId()
-        sessionId = encryptToSha256Md5(sessionId)
-
-        Log.d(TAG, schoolId)
-        Log.d(TAG, encryptedPassword)
-        val body = JsonObject()
-        body.addProperty("id", schoolId)
-        body.addProperty("password", encryptedPassword)
-        body.addProperty("sessionId", sessionId)
+    fun checkAuthValid() {
         lifecycleScope.launch {
-            kotlin.runCatching {
-                h4payService.schoolLogin(body)
-            }.onSuccess {
-                Log.d(TAG, it.headers().toString())
-                when {
-                    it.code() == 200 -> {
-                        token = it.headers()["x-access-token"]!!
-                        if (token != null) {
-                            Log.d(TAG, token!!)
-                            selectedSchool?.token = token as String
-                            selectedSchool?.saveToStorage(this@LoginActivity)
-                            val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                            startActivity(mainIntent)
-                        } else {
-                            Toast.makeText(
-                                this@LoginActivity,
-                                "토큰 검증에 실패했습니다. 로그인을 재시도해주세요.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                    it.code() == 400 -> {
-                        Toast.makeText(
-                            this@LoginActivity,
-                            "학교 또는 비밀번호가 올바르지 않습니다. 다시 시도해주세요.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    else -> {
-                        showServerError(this@LoginActivity)
-                    }
-                }
-            }.onFailure {
-                Log.d(TAG, it.message.toString());
+            val token = prefsRepository.getSchoolToken().first()
+            if (token.isNullOrEmpty()) {
                 Toast.makeText(
                     this@LoginActivity,
-                    "인증에 실패했습니다. 학교와 비밀번호가 올바른지 확인하세요.",
+                    "학교 로그인 정보를 불러올 수 없습니다. 로그인을 재시도해주세요.",
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-        }
-    }
-
-    private fun initService() {
-        val client = OkHttpClient.Builder()
-            .addNetworkInterceptor(networkInterceptor)
-            .build()
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl("${BuildConfig.API_URL}/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
-            .build()
-        h4payService = retrofit.create(H4PayService::class.java)
-
-    }
-
-    private fun getSchools() {
-        lifecycleScope.launch {
-            kotlin.runCatching {
-                h4payService.getSchools()
-            }.onSuccess {
-                val schoolNames: MutableList<String> = listOf<String>().toMutableList()
-                it.forEach { school ->
-                    schoolNames.add(school.name)
+                loaded = true
+                viewModel.fetchSchools()
+                view.submit.setOnClickListener {
+                    viewModel.login(selectedSchool?.id!!, view.password.text.toString())
                 }
-                schools = it
-                val spinnerAdapter: ArrayAdapter<String> = ArrayAdapter(
-                    this@LoginActivity,
-                    android.R.layout.simple_spinner_item,
-                    schoolNames
-                )
-                view.schoolSpinner.adapter = spinnerAdapter
-                view.schoolSpinner.onItemSelectedListener = this@LoginActivity
+                return@launch
             }
+            val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
+            startActivity(mainIntent)
+            finish()
         }
     }
 

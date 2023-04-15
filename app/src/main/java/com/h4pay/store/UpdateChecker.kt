@@ -10,10 +10,7 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import com.h4pay.store.model.Version
-import com.h4pay.store.networking.initService
 import java.io.File
 import kotlin.system.exitProcess
 
