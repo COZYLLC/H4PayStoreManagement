@@ -5,8 +5,7 @@ import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import com.h4pay.store.model.School
-import com.h4pay.store.repository.OtherRepository
-import com.h4pay.store.repository.SchoolRepository
+import com.h4pay.store.repository.*
 
 // 사용되는 파일에서 클래스 밖에 선언하면 싱글톤으로 사용 가능합니다.
 private val Context.dataStore by preferencesDataStore(name = "prefs")
@@ -18,6 +17,10 @@ class App : Application() {
         val gson = Gson()
         val schoolRepository = SchoolRepository()
         val otherRepository = OtherRepository()
+        val orderRepository = OrderRepository()
+        val giftRepository = GiftRepository()
+        val productRepository = ProductRepository()
+        val voucherRepository = VoucherRepository()
     }
 
 

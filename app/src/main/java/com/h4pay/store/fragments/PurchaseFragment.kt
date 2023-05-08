@@ -20,35 +20,62 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.google.zxing.integration.android.IntentIntegrator
 import com.h4pay.store.*
 import com.h4pay.store.databinding.FragmentPurchaseBinding
+import com.h4pay.store.model.Product
 import com.h4pay.store.model.Purchase
-import com.h4pay.store.networking.H4PayService
-import com.h4pay.store.networking.initService
-import com.h4pay.store.networking.tools.networkInterceptor
 import com.h4pay.store.recyclerAdapter.itemsRecycler
 import com.h4pay.store.util.*
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.internal.http2.StreamResetException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.text.NumberFormat
+import javax.net.ssl.SSLHandshakeException
 
 inline fun <reified T : Throwable> Result<*>.except(): Result<*> =
     onFailure { if (it is T) throw it }
 
+fun <T> CustomFlowCollector(
+    context: Context,
+    errorHandler: (Throwable) -> Unit,
+    successHandler: (T?) -> Unit
+): FlowCollector<State<T>> {
+    return FlowCollector { value ->
+        if (value is State.Error) {
+            // Todo: Handle Global Error (Network Error, Login Error, ...)
+            when (value.error) {
+                is SocketTimeoutException,
+                is UnknownHostException,
+                is SSLHandshakeException,
+                is StreamResetException,
+                is ConnectException -> {
+                    Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    errorHandler(value.error)
+                }
+            }
+        }
+        if (value is State.Success) {
+            successHandler(value.data)
+        }
+    }
+}
+
 class PurchaseFragment : Fragment() {
 
-    private lateinit var h4payService: H4PayService
     private lateinit var view: FragmentPurchaseBinding
-    private val TAG = "PurchaseFragment"
+    private val viewModel: PurchaseViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -68,81 +95,47 @@ class PurchaseFragment : Fragment() {
         val context = this.requireContext()
         view.exchangeButton.setOnClickListener {
             customDialogs.yesNoDialog(context, "확인", "정말로 교환처리 하시겠습니까?", {
-                val requestBody = JsonObject()
-                val orderIdArray = JsonArray()
-                orderIdArray.add(orderId)
-                requestBody.add("orderId", orderIdArray)
+                val orderIds = arrayListOf(orderId)
                 if (isGift(orderId) == true) { //선물인 경우
-                    lifecycleScope.launch {
-                        kotlin.runCatching {
-                            h4payService.exchangeGift(requestBody)
-                        }.onSuccess {
-                            exchangeSuccess(true)
-                        }.onFailure {
-                            Log.e(TAG, it.message!!)
-                            showServerError(requireActivity())
-                            return@launch
-                        }
-                    }
+                    viewModel.exchangeGift(orderIds)
                 } else { //선물이 아닌 경우
-                    lifecycleScope.launch {
-                        kotlin.runCatching {
-                            h4payService.exchangeOrder(requestBody)
-                        }.onSuccess {
-                            exchangeSuccess(true)
-                        }.onFailure {
-                            Log.e(TAG, it.message!!)
-                            showServerError(requireActivity())
-                            return@launch
-                        }
-                    }
+                    viewModel.exchangeOrder(orderIds)
                 }
             }, {})
         }
     }
 
+    private val purchaseDetailCollector by lazy {
+        CustomFlowCollector<Purchase?>(requireActivity(), {
+            customDialogs.yesOnlyDialog(requireContext(), "주문내역 조회 중 오류가 발생했습니다.", {}, "오류", null)
+        }) { data ->
+            if (data == null) return@CustomFlowCollector
+            loadOrderDetail(data)
+        }
+    }
+
+
     private fun processIntentOrderId(passedOrderId: String) {
         if (passedOrderId.length != 25) return
         if (isGift(passedOrderId) == true) {
-            lifecycleScope.launch {
-                kotlin.runCatching {
-                    h4payService.getGiftDetail(passedOrderId)
-                }.onSuccess {
-                    if (it.size == 1)
-                        loadOrderDetail(it[0])
-                }.onFailure {
-                    Toast.makeText(
-                        requireActivity(),
-                        "주문 정보를 불러올 수 없습니다.",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
-            }
+            viewModel.getGiftDetail(passedOrderId)
         } else {
-            lifecycleScope.launch {
-                kotlin.runCatching {
-                    h4payService.getOrderDetail(passedOrderId)
-                }.onSuccess {
-                    if (it.size == 1)
-                        loadOrderDetail(it[0])
-                }.onFailure {
-                    Toast.makeText(
-                        requireActivity(),
-                        "주문 정보를 불러올 수 없습니다.",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
-            }
+            viewModel.getOrderDetail(passedOrderId)
         }
     }
 
     override fun onStart() {
         super.onStart()
-        h4payService = initService()
         fetchProduct()
         initUi()
+
+        view.lifecycleOwner = requireActivity()
+        lifecycleScope.launch {
+            viewModel.purchaseDetailState.collect(purchaseDetailCollector)
+        }
+        lifecycleScope.launch {
+            viewModel.productListState.collect(productsCollector)
+        }
         if (arguments != null) {
             val passedId: String? = requireArguments()["orderId"] as String?
             if (passedId != null)
@@ -225,40 +218,12 @@ class PurchaseFragment : Fragment() {
 
                     when {
                         isGift(inputtedOrderId) == false -> { // general order
-                            lifecycleScope.launch {
-                                kotlin.runCatching {
-                                    h4payService.getOrderDetail(inputtedOrderId)
-                                }.onSuccess {
-                                    if (it.size == 1)
-                                        loadOrderDetail(it[0])
-                                }.onFailure {
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "주문 내역을 불러올 수 없습니다!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@launch
-                                }
-                            }
+                            viewModel.getOrderDetail(inputtedOrderId)
                             //API CALL
                         }
                         isGift(inputtedOrderId) == true -> { // gift
                             Log.i("OrderId", inputtedOrderId)
-                            lifecycleScope.launch {
-                                kotlin.runCatching {
-                                    h4payService.getGiftDetail(inputtedOrderId)
-                                }.onSuccess {
-                                    if (it.size == 1)
-                                        loadOrderDetail(it[0])
-                                }.onFailure {
-                                    Toast.makeText(
-                                        requireActivity(),
-                                        "주문 내역을 불러올 수 없습니다!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@launch
-                                }
-                            }
+                            viewModel.getGiftDetail(inputtedOrderId)
                         }
                         else -> {
                             Toast.makeText(
@@ -285,20 +250,16 @@ class PurchaseFragment : Fragment() {
         view.exchangeButton.isEnabled = !exchanged
     }
 
-
+    private val productsCollector by lazy {
+        CustomFlowCollector<List<Product>>(requireContext(), {
+            customDialogs.yesOnlyDialog(requireContext(), "주문내역 조회 중 오류가 발생했습니다.", {}, "오류", null)
+        }) {
+            prodList = it ?: listOf()
+        }
+    }
 
     private fun fetchProduct() {
-        lifecycleScope.launchWhenCreated {
-            kotlin.runCatching {
-                h4payService.getProducts()
-            }.onSuccess {
-                prodList = it
-            }.except<CancellationException>()
-                .onFailure {
-                    Log.e(TAG, it.message!!)
-                    showServerError(requireActivity())
-                }
-        }
+        viewModel.getProducts()
     }
 
     fun loadOrderDetail(

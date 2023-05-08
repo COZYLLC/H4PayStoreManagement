@@ -11,7 +11,6 @@ import com.google.gson.JsonObject
 import com.h4pay.store.model.School
 import com.h4pay.store.model.Version
 import com.h4pay.store.model.dto.LoginDto
-import com.h4pay.store.model.tokenFromStorageFlow
 import com.h4pay.store.repository.PrefsRepository
 import com.h4pay.store.usecase.GetSchools
 import com.h4pay.store.usecase.GetVersionInfo
@@ -29,6 +28,9 @@ sealed class State<T> {
     data class Success<T>(val data: T?) : State<T>()
     class Loading<T> : State<T>()
     data class Error<T>(val error: Throwable) : State<T>()
+
+    fun isError() = this is Error
+    fun isSuccess() = this is Success
 }
 
 class LoginViewModel(private val prefsRepository: PrefsRepository) : ViewModel() {
@@ -78,6 +80,7 @@ class LoginViewModel(private val prefsRepository: PrefsRepository) : ViewModel()
                     )
                 )
             )
+
         }
     }
 

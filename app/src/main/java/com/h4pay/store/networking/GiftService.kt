@@ -2,6 +2,7 @@ package com.h4pay.store.networking
 
 import com.google.gson.JsonObject
 import com.h4pay.store.model.Gift
+import com.h4pay.store.model.dto.ExchangeRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -14,6 +15,6 @@ interface GiftService {
     suspend fun getGiftDetail(@Query("orderId") orderId: String): List<Gift>
 
     @POST("gifts/exchange")
-    suspend fun exchangeGift(@Body body: JsonObject)
+    suspend fun exchangeGift(@Body body: ExchangeRequestDto)
 
 }

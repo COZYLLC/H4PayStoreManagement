@@ -2,6 +2,7 @@ package com.h4pay.store.networking
 
 import com.h4pay.store.BuildConfig
 import com.h4pay.store.networking.tools.networkInterceptor
+import com.h4pay.store.networking.tools.responseInterceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -12,7 +13,8 @@ import java.util.concurrent.TimeUnit
 /**
  * 여러 서비스들을 합친 Service Interface 입니다.
  */
-interface Service : StoreService, SchoolService, ProductService, OrderService, GiftService, VoucherService, OtherService
+interface Service : StoreService, SchoolService, ProductService, OrderService, GiftService,
+    VoucherService, OtherService
 
 object RetrofitInstance {
     private val client = OkHttpClient.Builder()
@@ -20,7 +22,8 @@ object RetrofitInstance {
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS)
-        .addNetworkInterceptor(networkInterceptor)
+        .addInterceptor(networkInterceptor)
+        .addInterceptor(responseInterceptor)
         .build()
     private val retrofit by lazy {
         Retrofit.Builder()

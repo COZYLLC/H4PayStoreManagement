@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.JsonArray
@@ -25,8 +26,6 @@ import com.h4pay.store.*
 import com.h4pay.store.databinding.FragmentVoucherBinding
 import com.h4pay.store.model.Product
 import com.h4pay.store.model.Voucher
-import com.h4pay.store.networking.H4PayService
-import com.h4pay.store.networking.initService
 import com.h4pay.store.recyclerAdapter.itemsRecycler
 import com.h4pay.store.util.*
 import kotlinx.coroutines.delay
@@ -39,7 +38,7 @@ class VoucherFragment : Fragment() {
     private lateinit var view: FragmentVoucherBinding
     private lateinit var recyclerAdapter: itemsRecycler
     private lateinit var voucherId: String
-    private lateinit var h4payService: H4PayService
+    private val viewModel: VoucherViewModel by viewModels()
     private var item = JsonObject()
 
     override fun onCreateView(
@@ -58,12 +57,39 @@ class VoucherFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         initUI()
-        h4payService = initService()
+        view.lifecycleOwner = requireActivity()
         val passedId: String? = requireArguments()["orderId"] as String?
+
+        lifecycleScope.launch {
+            viewModel.voucherDetailState.collect(voucherDetailCollector)
+        }
+        lifecycleScope.launch {
+
+            viewModel.exchangeVoucherResultState.collect(exchangeVoucherResultCollector)
+        }
 
         if (passedId != null) {
             loadVoucherDetail(passedId)
         }
+    }
+
+    private val voucherDetailCollector by lazy {
+        CustomFlowCollector<Voucher?>(requireContext(),
+            {
+                customDialogs.yesOnlyDialog(requireContext(), "금액권 정보를 불러오지 못했습니다.", {}, "오류", null)
+            }, {
+                if (it == null) {
+                    Toast.makeText(
+                        requireActivity(),
+                        "상품권 정보를 불러올 수 없어요.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@CustomFlowCollector
+                } else {
+                    loadVoucherDetail(it)
+                    voucherId = it.id
+                }
+            })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -138,23 +164,7 @@ class VoucherFragment : Fragment() {
                         return
                     }
                     Log.d("BARCODE", barcode)
-                    lifecycleScope.launch {
-                        kotlin.runCatching {
-                            h4payService.getVoucherDetail(barcode)
-                        }.onSuccess {
-                            if (it.isEmpty()) {
-                                Toast.makeText(
-                                    requireActivity(),
-                                    "상품권 정보를 불러올 수 없어요.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@onSuccess
-                            } else {
-                                loadVoucherDetail(it[0])
-                                voucherId = barcode
-                            }
-                        }
-                    }
+                    viewModel.getVoucherDetail(barcode)
 
                     p0!!.clear()
                 }
@@ -209,22 +219,7 @@ class VoucherFragment : Fragment() {
     private fun loadVoucherDetail(passedId: String) {
         voucherId = passedId
         view.idInput.setText(passedId)
-        lifecycleScope.launch {
-            kotlin.runCatching {
-                h4payService.getVoucherDetail(voucherId)
-            }.onSuccess {
-                if (it.isEmpty()) {
-                    Toast.makeText(
-                        requireActivity(),
-                        "상품권 정보를 불러올 수 없어요.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@onSuccess
-                } else {
-                    loadVoucherDetail(it[0])
-                }
-            }
-        }
+        viewModel.getVoucherDetail(passedId)
     }
 
     private fun initRecyclerView() {
@@ -255,14 +250,14 @@ class VoucherFragment : Fragment() {
 
     private fun unLoadVoucher() {
         view.orderUid.text = ""
-        view.orderDate.text =""
+        view.orderDate.text = ""
         view.orderExpire.text = ""
         view.orderExchanged.text = ""
         val backgroundDrawable = R.color.white
         view.orderExchanged.background =
             ContextCompat.getDrawable(requireContext(), backgroundDrawable)
         view.voucherAmount.text = ""
-            view.productArea.visibility = View.INVISIBLE
+        view.productArea.visibility = View.INVISIBLE
         recyclerAdapter.changeItems(JsonArray())
         onRecyclerDataChanged()
         view.exchangeButton.isVisible = false
@@ -328,24 +323,22 @@ class VoucherFragment : Fragment() {
                 return
             }
             else -> {
-                val requestBody = JsonObject()
-                requestBody.addProperty("id", voucher.id)
-                requestBody.add("item", item)
-                lifecycleScope.launch {
-                    kotlin.runCatching {
-                        h4payService.exchangeVoucher(requestBody)
-                    }.onSuccess {
-                        Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                        unLoadVoucher()
-                    }.onFailure {
-                        Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                        return@onFailure
-                    }
-                }
+                viewModel.exchangeVoucher(voucher.id, item)
             }
         }
+    }
+
+    private val exchangeVoucherResultCollector by lazy {
+        CustomFlowCollector<Boolean>(requireContext(),
+            {
+                Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
+                    .show()
+                unLoadVoucher()
+            },
+            {
+                Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
+                    .show()
+            })
     }
 
     fun onRecyclerDataChanged() {

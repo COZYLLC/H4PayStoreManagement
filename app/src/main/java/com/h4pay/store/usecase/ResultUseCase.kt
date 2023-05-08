@@ -12,7 +12,13 @@ abstract class ResultUseCase<P, R> {
             H4PayLogger.d(this, "Running UseCase $this with following params: $params")
             return kotlin.runCatching {
                 State.Success(onExecute(params))
-            }.getOrElse { State.Error(it) }
+            }.getOrElse {
+                H4PayLogger.e(
+                    this,
+                    "Exception ${it.javaClass.canonicalName} occurred while running UseCase: $this\nDetail: ${it.stackTraceToString()}"
+                )
+                State.Error(it)
+            }
         } catch (e: Exception) {
             H4PayLogger.e(
                 this,

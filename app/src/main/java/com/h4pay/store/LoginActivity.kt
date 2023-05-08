@@ -241,6 +241,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 }
                 return@launch
             }
+                App.token = token
             val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
             startActivity(mainIntent)
             finish()

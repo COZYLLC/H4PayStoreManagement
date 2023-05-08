@@ -1,32 +1,35 @@
 package com.h4pay.store.networking.tools
 
-import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonParseException
 import com.google.gson.reflect.TypeToken
-import com.h4pay.store.dataStore
-import com.h4pay.store.model.tokenFromStorageFlow
-import com.h4pay.store.networking.ResponseWrapper
-import com.h4pay.store.token
-import kotlinx.coroutines.flow.collect
+import com.h4pay.store.App.Companion.gson
+import com.h4pay.store.App.Companion.token
+import com.h4pay.store.model.ResponseWrapper
+import com.h4pay.store.util.H4PayLogger
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.Response
-
-private val TAG = "NetworkInterceptor"
 
 
 val networkInterceptor = Interceptor { chain ->
-    val gson = Gson()
-    val request = chain.request().newBuilder()
+    val copy = chain.request()
+    val buffer = okio.Buffer()
+    copy.body?.writeTo(buffer)
+    H4PayLogger.d("Interceptor", token.toString())
+    val request = chain.request()
+        .newBuilder()
         .addHeader("x-access-token", token ?: "")
         .build()
     // Request
-    val response = chain.proceed(request)
-    Log.d(TAG, response.toString())
+    chain.proceed(request)
+}
+
+val responseInterceptor = Interceptor { chain ->
     // Get raw json response
+    val request = chain.request()
+    // Request
+    val response = chain.proceed(request)
     val rawJsonResponse = response.body?.string() ?: "{}"
 
     // Convert json to data object
@@ -47,6 +50,5 @@ val networkInterceptor = Interceptor { chain ->
         .message(res.message ?: response.message)
         .body(resultJson.toResponseBody())
         .build()
-    Log.d(TAG, newResponse.toString())
     newResponse
 }

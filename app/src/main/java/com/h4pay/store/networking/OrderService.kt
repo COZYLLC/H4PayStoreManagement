@@ -2,6 +2,7 @@ package com.h4pay.store.networking
 
 import com.google.gson.JsonObject
 import com.h4pay.store.model.Order
+import com.h4pay.store.model.dto.ExchangeRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -14,6 +15,6 @@ interface OrderService {
     suspend fun getOrderDetail(@Query("orderId") orderId: String): List<Order>
 
     @POST("orders/exchange")
-    suspend fun exchangeOrder(@Body body: JsonObject)
+    suspend fun exchangeOrder(@Body body: ExchangeRequestDto)
 
 }

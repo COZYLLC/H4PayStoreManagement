@@ -1,6 +1,6 @@
 package com.h4pay.store.networking
 
-import com.google.gson.JsonObject
+import com.h4pay.store.model.dto.ExchangeVoucherDto
 import com.h4pay.store.model.Voucher
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -14,6 +14,6 @@ interface VoucherService {
     suspend fun getVoucherDetail(@Query("id") voucherId: String): List<Voucher>
 
     @POST("vouchers/exchange")
-    suspend fun exchangeVoucher(@Body body: JsonObject)
+    suspend fun exchangeVoucher(@Body body: ExchangeVoucherDto)
 
 }

@@ -10,8 +10,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.h4pay.store.model.signOut
 import com.h4pay.store.networking.RetrofitInstance
+import com.h4pay.store.repository.PrefsRepository
 import kotlinx.coroutines.launch
 
 class H4PayInfo : AppCompatActivity(){
@@ -31,7 +31,7 @@ class H4PayInfo : AppCompatActivity(){
         signout = findViewById(R.id.signout)
         signout.setOnClickListener {
            lifecycleScope.launch {
-               signOut(this@H4PayInfo)
+               PrefsRepository(this@H4PayInfo).signOut()
                Toast.makeText(this@H4PayInfo, "로그아웃이 완료되었습니다. 앱을 재실행합니다.", Toast.LENGTH_SHORT).show()
                val intent = Intent(this@H4PayInfo, LoginActivity::class.java)
                startActivity(intent)

@@ -2,6 +2,7 @@ package com.h4pay.store.repository
 
 import com.google.gson.JsonObject
 import com.h4pay.store.model.School
+import com.h4pay.store.model.dto.ChangeStoreStatusDto
 import com.h4pay.store.model.dto.LoginDto
 import com.h4pay.store.networking.RetrofitInstance
 import retrofit2.Response
@@ -16,5 +17,13 @@ class SchoolRepository {
 
     suspend fun schoolLogin(data: LoginDto): Response<String> {
         return RetrofitInstance.service.schoolLogin(data)
+    }
+
+    suspend fun getStoreStatus(): Boolean {
+        return RetrofitInstance.service.getStoreStatus()
+    }
+
+    suspend fun changeStoreStatus(isOpened: Boolean): Boolean {
+        return RetrofitInstance.service.changeStoreStatus(ChangeStoreStatusDto(isOpened))
     }
 }
