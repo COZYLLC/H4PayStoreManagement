@@ -3,16 +3,18 @@ package com.h4pay.store
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import com.h4pay.store.databinding.ActivityMainBinding
 import com.h4pay.store.fragments.CustomFlowCollector
 import com.h4pay.store.fragments.PurchaseFragment
+import com.h4pay.store.fragments.VoucherFragment
 import com.h4pay.store.model.Product
 import com.h4pay.store.util.currentFragmentType
 import com.h4pay.store.util.swapFragment
@@ -23,6 +25,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 lateinit var prodList: List<Product>
+
+object FragmentTag {
+    const val PURCHASE = "PURCHASE"
+    const val VOUCHER = "VOUCHER"
+}
 
 // At the top level of your kotlin file:
 //val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "store")

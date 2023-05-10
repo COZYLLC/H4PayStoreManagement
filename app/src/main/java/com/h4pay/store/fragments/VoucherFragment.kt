@@ -331,17 +331,18 @@ class VoucherFragment : Fragment() {
     private val exchangeVoucherResultCollector by lazy {
         CustomFlowCollector<Boolean>(requireContext(),
             {
-                Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
+                Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
                     .show()
                 unLoadVoucher()
             },
             {
-                Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
+                Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
                     .show()
+                unLoadVoucher()
             })
     }
 
-    fun onRecyclerDataChanged() {
+    private fun onRecyclerDataChanged() {
         item = itemArrayToJson(recyclerAdapter.getItems())
         Log.d("RECYCLER", item.toString())
         view.totalAmount.text = "현재 사용 금액: ${moneyFormat.format(calcTotalAmount())} 원"

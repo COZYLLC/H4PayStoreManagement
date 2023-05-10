@@ -25,13 +25,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.JsonArray
 import com.google.zxing.integration.android.IntentIntegrator
+import com.google.zxing.integration.android.IntentResult
 import com.h4pay.store.*
 import com.h4pay.store.databinding.FragmentPurchaseBinding
 import com.h4pay.store.model.Product
 import com.h4pay.store.model.Purchase
 import com.h4pay.store.recyclerAdapter.itemsRecycler
 import com.h4pay.store.util.*
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -82,7 +82,6 @@ class PurchaseFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.e("PurchaseFragment", "created")
 
         view = DataBindingUtil.inflate(inflater, R.layout.fragment_purchase, container, false)
 
@@ -109,11 +108,26 @@ class PurchaseFragment : Fragment() {
         CustomFlowCollector<Purchase?>(requireActivity(), {
             customDialogs.yesOnlyDialog(requireContext(), "주문내역 조회 중 오류가 발생했습니다.", {}, "오류", null)
         }) { data ->
+            H4PayLogger.d(this, data.toString())
             if (data == null) return@CustomFlowCollector
             loadOrderDetail(data)
         }
     }
 
+
+    private val exchangeResultCollector by lazy {
+        CustomFlowCollector<Boolean>(requireContext(),
+            {
+                Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
+                    .show()
+                makeEmpty()
+            },
+            {
+                Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
+                    .show()
+                makeEmpty()
+            })
+    }
 
     private fun processIntentOrderId(passedOrderId: String) {
         if (passedOrderId.length != 25) return
@@ -136,6 +150,10 @@ class PurchaseFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.productListState.collect(productsCollector)
         }
+        lifecycleScope.launch {
+            viewModel.exchangeState.collect(exchangeResultCollector)
+        }
+
         if (arguments != null) {
             val passedId: String? = requireArguments()["orderId"] as String?
             if (passedId != null)
@@ -192,6 +210,7 @@ class PurchaseFragment : Fragment() {
                 }
             }
         }
+
         view.orderIdInput.addTextChangedListener(object : TextWatcher {
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
 
@@ -219,10 +238,8 @@ class PurchaseFragment : Fragment() {
                     when {
                         isGift(inputtedOrderId) == false -> { // general order
                             viewModel.getOrderDetail(inputtedOrderId)
-                            //API CALL
                         }
                         isGift(inputtedOrderId) == true -> { // gift
-                            Log.i("OrderId", inputtedOrderId)
                             viewModel.getGiftDetail(inputtedOrderId)
                         }
                         else -> {
@@ -314,18 +331,6 @@ class PurchaseFragment : Fragment() {
         } //view.orderIdInputText focus in
     }
 
-    private fun exchangeSuccess(status: Boolean) {
-        if (status) {
-            Toast.makeText(requireActivity(), "교환이 정상적으로 완료되었습니다!", Toast.LENGTH_SHORT).show()
-            makeEmpty()
-        } else {
-            Toast.makeText(
-                requireActivity(),
-                "교환에 실패했습니다.\n이미 교환되었거나 없는 주문번호입니다.",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 
     private fun makeEmpty() {
         view.orderExchanged.text = ""
@@ -344,12 +349,12 @@ class PurchaseFragment : Fragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null && result.contents != null) {
-            Log.i("OrderId", result.contents)
-            view.orderIdInput.setText(result.contents)
+        val scanningResult: IntentResult? =
+            IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (scanningResult != null && !scanningResult.contents.isNullOrEmpty()) {
+            view.orderIdInput.setText(scanningResult.contents)
         } else {
-            super.onActivityResult(requestCode, resultCode, data)
+            Toast.makeText(activity, "Nothing scanned", Toast.LENGTH_SHORT).show()
         }
     }
 

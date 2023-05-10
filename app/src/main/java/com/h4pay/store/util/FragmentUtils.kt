@@ -38,7 +38,7 @@ fun openImm(context: Activity, guide: Boolean) { // guide 값에 따라 가상 �
 
 fun initScan(context: Fragment) {
     val integrator = IntentIntegrator.forSupportFragment(context)
-    integrator.setBeepEnabled(false)
+    integrator.setBeepEnabled(true)
     integrator.setOrientationLocked(true)
     integrator.setPrompt("바코드를 스캔해주세요.")
     integrator.initiateScan()

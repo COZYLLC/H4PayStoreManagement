@@ -47,7 +47,7 @@ class PurchaseViewModel : ViewModel() {
 
     fun getGiftDetail(orderId: String) {
         viewModelScope.launch {
-            _purchaseDetailState.emit(GetOrderDetail().run(orderId) as State<Purchase?>)
+            _purchaseDetailState.emit(GetGiftDetail().run(orderId) as State<Purchase?>)
         }
     }
 }
