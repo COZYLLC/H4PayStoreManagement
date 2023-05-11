@@ -88,7 +88,6 @@ class PurchaseFragment : Fragment() {
         return view.root
     }
 
-
     private fun setExchangeButtonListener(orderId: String) {
         //------Cancel and Exchange Button OnClick Event----------
         val context = this.requireContext()
@@ -158,12 +157,14 @@ class PurchaseFragment : Fragment() {
             val passedId: String? = requireArguments()["orderId"] as String?
             if (passedId != null)
                 processIntentOrderId(passedId)
+
         }
     }
 
     private fun initUi() {
         view.cameraScan.setOnClickListener {
             initScan(this)
+
         }
         view.clearId.setOnClickListener {
             view.orderIdInput.setText("")

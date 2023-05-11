@@ -9,12 +9,11 @@ import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.h4pay.store.databinding.ActivityMainBinding
 import com.h4pay.store.fragments.CustomFlowCollector
 import com.h4pay.store.fragments.PurchaseFragment
-import com.h4pay.store.fragments.VoucherFragment
 import com.h4pay.store.model.Product
 import com.h4pay.store.util.currentFragmentType
 import com.h4pay.store.util.swapFragment
@@ -60,7 +59,7 @@ val moneyFormat: NumberFormat = DecimalFormat("#,###")
 
 var storeStatus: Boolean = false
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
 
     private val TAG = "MainActivity"
     private lateinit var view: ActivityMainBinding
@@ -92,6 +91,10 @@ class MainActivity : AppCompatActivity() {
         view.openStatus.setOnCheckedChangeListener { _, isOpened ->
             viewModel.changeStoreStatus(isOpened)
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

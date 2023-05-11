@@ -339,7 +339,8 @@ class VoucherFragment : Fragment() {
                 Toast.makeText(requireActivity(), "교환 처리에 성공했습니다.", Toast.LENGTH_SHORT)
                     .show()
                 unLoadVoucher()
-            })
+            }
+        )
     }
 
     private fun onRecyclerDataChanged() {
