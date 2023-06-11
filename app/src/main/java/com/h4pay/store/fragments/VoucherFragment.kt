@@ -74,7 +74,7 @@ class VoucherFragment : Fragment() {
     }
 
     private val voucherDetailCollector by lazy {
-        CustomFlowCollector<Voucher?>(requireContext(),
+        CustomFlowCollector<Voucher?>(requireActivity(),
             {
                 customDialogs.yesOnlyDialog(requireContext(), "금액권 정보를 불러오지 못했습니다.", {}, "오류", null)
             }, {
@@ -329,7 +329,7 @@ class VoucherFragment : Fragment() {
     }
 
     private val exchangeVoucherResultCollector by lazy {
-        CustomFlowCollector<Boolean>(requireContext(),
+        CustomFlowCollector<Boolean>(requireActivity(),
             {
                 Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
                     .show()

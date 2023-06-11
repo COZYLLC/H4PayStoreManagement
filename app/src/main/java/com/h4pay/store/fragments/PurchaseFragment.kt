@@ -1,6 +1,7 @@
 package com.h4pay.store.fragments
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -15,11 +16,13 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,11 +34,13 @@ import com.h4pay.store.databinding.FragmentPurchaseBinding
 import com.h4pay.store.model.Product
 import com.h4pay.store.model.Purchase
 import com.h4pay.store.recyclerAdapter.itemsRecycler
+import com.h4pay.store.repository.PrefsRepository
 import com.h4pay.store.util.*
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import okhttp3.internal.http2.StreamResetException
+import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -46,7 +51,7 @@ inline fun <reified T : Throwable> Result<*>.except(): Result<*> =
     onFailure { if (it is T) throw it }
 
 fun <T> CustomFlowCollector(
-    context: Context,
+    context: Activity,
     errorHandler: (Throwable) -> Unit,
     successHandler: (T?) -> Unit
 ): FlowCollector<State<T>> {
@@ -60,6 +65,14 @@ fun <T> CustomFlowCollector(
                 is StreamResetException,
                 is ConnectException -> {
                     Toast.makeText(context, "네트워크 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                }
+                is HttpException -> {
+                    if (value.error.code() == 401) {
+                        PrefsRepository(context).signOut()
+                        val intent = Intent(context, LoginActivity::class.java)
+                        context.startActivity(intent)
+                        context.finish()
+                    }
                 }
                 else -> {
                     errorHandler(value.error)
@@ -115,7 +128,7 @@ class PurchaseFragment : Fragment() {
 
 
     private val exchangeResultCollector by lazy {
-        CustomFlowCollector<Boolean>(requireContext(),
+        CustomFlowCollector<Boolean>(requireActivity(),
             {
                 Toast.makeText(requireActivity(), "교환 처리에 실패했습니다.", Toast.LENGTH_SHORT)
                     .show()
@@ -269,8 +282,8 @@ class PurchaseFragment : Fragment() {
     }
 
     private val productsCollector by lazy {
-        CustomFlowCollector<List<Product>>(requireContext(), {
-            customDialogs.yesOnlyDialog(requireContext(), "주문내역 조회 중 오류가 발생했습니다.", {}, "오류", null)
+        CustomFlowCollector<List<Product>>(requireActivity(), {
+            customDialogs.yesOnlyDialog(requireContext(), "제품 목록 조회 중 오류가 발생했습니다.", {}, "오류", null)
         }) {
             prodList = it ?: listOf()
         }
