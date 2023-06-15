@@ -1,7 +1,9 @@
 package com.h4pay.store
 
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.ConnectivityManager
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import retrofit2.Response
+
 
 const val keyboardDetectDelay: Long = 1000
 
@@ -133,6 +136,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     val token = res.headers()["x-access-token"]!!
                     // Todo: Save Token to Store
                     prefsRepository.setSchoolToken(token)
+                    App.token = token
                     val mainIntent =
                         Intent(this, MainActivity::class.java)
                     startActivity(mainIntent)
@@ -242,7 +246,7 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 return@launch
             }
 
-                App.token = token
+            App.token = token
             val mainIntent = Intent(this@LoginActivity, MainActivity::class.java)
             startActivity(mainIntent)
             finish()
@@ -255,5 +259,16 @@ class LoginActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
         TODO("Not yet implemented")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val completeFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        registerReceiver(mCompleteReceiver, completeFilter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(mCompleteReceiver)
     }
 }

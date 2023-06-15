@@ -54,7 +54,7 @@ fun downloadApp(context: Context, version: Double, url: String) {
         .split("\\.".toRegex())[1]
 }
 
-private val mCompleteReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+val mCompleteReceiver: BroadcastReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent!!.action
         if (action == DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
